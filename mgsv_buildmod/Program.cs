@@ -10,35 +10,73 @@ using System.Configuration;
 using System.Collections.Specialized;
 using System.Xml.Linq;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace mgsv_buildmod {
     class Program {
-        static string projectPath = ConfigurationManager.AppSettings.Get("projectPath");
-        static string luaSubPath = ConfigurationManager.AppSettings.Get("luaSubPath");
-        static string docsSubPath = ConfigurationManager.AppSettings.Get("docsSubPath");
-        static string luaDataFilesSubpath = ConfigurationManager.AppSettings.Get("luaDataFilesSubpath");
-        static string luaPackFilesSubPath = ConfigurationManager.AppSettings.Get("luaPackFilesSubPath");
-        static string projectPackFilesSubPath = ConfigurationManager.AppSettings.Get("packSubPath");
-        static string customPackFilesSubPath = ConfigurationManager.AppSettings.Get("customPackSubPath");
-        static string otherMgsvsSubPath = ConfigurationManager.AppSettings.Get("otherMgsvsSubPath");
-        static string externalLuaSubPath = ConfigurationManager.AppSettings.Get("externalLuaSubPath");
+        class BuildModSettings {
+            public string projectPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp";
+            public string externalInstallSubPath = "mod";
 
-        static string luaPath = projectPath + luaSubPath;
-        static string luaDataFilesPathFull = luaPath + luaDataFilesSubpath;
-        static string luaPackFilesPathFull = luaPath + luaPackFilesSubPath;
-        static string projectPackFilesPathFull = projectPath + projectPackFilesSubPath;
-        static string customPackFilesPathFull = projectPath + customPackFilesSubPath;
-        static string otherMgsvsPathFull = projectPath + otherMgsvsSubPath;
+            public string luaDataFilesSubpath = @"\dat1_dat-lua";
+            public string luaPackFilesSubPath = @"\fpkd-combined-lua";
 
-        static string docsPathFull = projectPath + docsSubPath;
+            public string luaDataFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\data1_dat-lua";
+            public string luaPackFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\fpkd-combined-lua";
 
-        static string externalLuaPathFull = projectPath + externalLuaSubPath;
-        static string externalLuaPathFullRelease = projectPath + externalLuaSubPath + "Release";
+            //tex folders have various tools run on them (see buildFox2s etc settings)
+            //then are copied outright to makebitepath
+            public List<string> modPackPaths = new List<string> {
+                // @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk",
+                // @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk-test",
+            };
+            //public string projectPackFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk";
+            //public string projectPackFilesPath_test = @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk-test";
 
-        static string makebiteBuildPath = ConfigurationManager.AppSettings.Get("modBuildPath");
-        static string modPackFilesSubpath = @"\packFiles";
+            public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";
 
-        static string buildFolder = ConfigurationManager.AppSettings.Get("buildFolder");
+            public string docsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\external\docs";
+
+            public string externalLuaPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\external";
+
+            public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
+
+            public string buildFolder = @"D:\Projects\MGS\build\infiniteheaven";
+
+            public string gamePath = @"D:\Games\Steam\SteamApps\common\MGS_TPP";
+
+
+            public string gameArchiveSubpath = @"\master";
+            public string targetGamePatchFolder0Subpath = @"\0";
+            //static string patchArchive00Subpath = "\\00";
+
+            public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
+            public string ihHookPath = @"D:\GitHub\IHHook\x64\Debug\IHHook.dll";
+            public string ihHookProxyName = "dinput8.dll";
+
+
+            // TODO: just point to sperate file
+            public string modVersionDefault = "rXXX";
+            public string modFileName = "Infinite Heaven";
+            public string readMeName = "Infinite Heaven Readme.txt";
+
+            public bool cleanDat = true;
+
+            public bool buildLng2s = true;
+            public bool buildSubps = false;
+            public bool buildFox2s = true;
+            public bool copyModPackFolders = true;
+            public bool copyExternalLua = false;//tex copies external to makeBite/GameDir (WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release).
+
+            public bool makeMod = true;
+            public bool installMod = true;
+            public bool installOtherMods = true;
+
+            public bool release = false;//DEBUGNOW dont forget to also set copyExternalLua true
+
+
+            public bool waitEnd = true;
+        }
 
         static string gzsToolPath = ConfigurationManager.AppSettings.Get("gzsToolPath");
         static string langToolPath = ConfigurationManager.AppSettings.Get("langToolPath");
@@ -47,35 +85,11 @@ namespace mgsv_buildmod {
         static string makeBitePath = ConfigurationManager.AppSettings.Get("makeBitePath");
         static string snakeBitePath = ConfigurationManager.AppSettings.Get("snakeBitePath");
 
-        static string gamePath = ConfigurationManager.AppSettings.Get("gamePath");
-
-        static string cleanDataPath = ConfigurationManager.AppSettings.Get("cleanDataPath");
-        static string gameArchiveSubpath = @"\master";
-        static string targetGamePatchFolder0Subpath = @"\0";
-        //static string patchArchive00Subpath = "\\00";
-
-        static string targetGameArchiveSubpath = "\\01";
-
-        static string ihExtPath = ConfigurationManager.AppSettings.Get("ihExtPath");
-
-
-        //static string lngPackName = "";
-
-        // TODO: just point to sperate file
-        static string modVersionDefault = "rXXX";
-        static string modFileName = "Infinite Heaven";
-        static string readMeName = "Infinite Heaven Readme.txt";
-
-
-        static string readmePathFull = docsPathFull + "\\" + readMeName;
-
         public class BuildFileInfo {
             public string fullPath = "";
             public bool doBuild = false;
-            //  public string originalQar = "";
-            public string filePath = "";
+            // public string filePath = "";
             public string packPath = "";
-            public string qarPath = "";
         }
 
         public static string UnfungePath(string path) {
@@ -86,118 +100,90 @@ namespace mgsv_buildmod {
         public delegate void ProcessFileDelegate(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
 
         static void Main(string[] args) {
-            bool waitEnd = true;
-            bool makeMod = true;
-            bool installMod = true;
+            if (args.Length == 0) {//tex write default config 
+                Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
 
+                var config = new BuildModSettings();
+                string jsonOutPath = @"c:\Projects\MGS\Tools\BuildMod\mgsv_buildmod\config-example.json";
+                Console.WriteLine($"Writing default config to {jsonOutPath}");
+                JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
+                serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                string jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
 
-            bool copyFpkLoose = true;
+                File.WriteAllText(jsonOutPath, jsonStringOut);
 
-            //bool wantCleanFpks = false;
-
-            bool buildLng2s = true;
-            bool buildSubps = false;
-            bool buildFox2s = true;
-            bool copyProcessFolders = true;
-            bool copyExternalLua = true;
-
-            bool buildCustomFpks = false;
-
-            bool release = false;
-
-            foreach (string s in args) {
-                if (s == "-release") {
-                    release = true;
-                }
-                if (s == "-nofoxtool") {
-                    buildLng2s = false;
-                    buildSubps = false;
-                    buildFox2s = false;
-                }
+                return;
             }
 
+            string configPath = GetPath(args[0]);
+            if (configPath == null) {
+                Console.Write("ERROR: could not find config path");
+                return;
+            }
 
-            if (release) {
+            string jsonString = File.ReadAllText(configPath);
+            BuildModSettings bs = JsonConvert.DeserializeObject<BuildModSettings>(jsonString);
+            if (!Directory.Exists(bs.gamePath)) {
+                Console.WriteLine($"ERROR: BuildModSettings: Could not find gamePath {bs.gamePath}");
+                return;
+            }
+
+            if (bs.release) {
                 Console.WriteLine("doing release build");
-            }
-
-            //tex folders to run various tools over
-            List<string> processFolders = new List<string>();
-            //TODO: load from txt file
-
-            processFolders.Add(projectPackFilesPathFull);
-
-            //tex testexternal
-            if (release == false) {
-                processFolders.Add(customPackFilesPathFull);
             }
 
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
-            //tex start actually doing shit
 
             Console.WriteLine("deleting existing makebite build folder");
-            DeleteAndWait(makebiteBuildPath);//tex GOTCHA will complain if open in explorer
+            DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
 
+            if (Directory.Exists(bs.docsPath)) {
+                Console.WriteLine("copying docs files to build folder");
+                string docsDestinationPath = bs.buildFolder + @"\docs";
+                if (Directory.Exists(docsDestinationPath)) {
+                    DeleteAndWait(docsDestinationPath);
+                }
+                if (!Directory.Exists(docsDestinationPath)) {
+                    Directory.CreateDirectory(docsDestinationPath);
+                }
+                CopyFilesRecursively(new DirectoryInfo(bs.docsPath), new DirectoryInfo(docsDestinationPath), "", "");
+            }
 
-            if (release) {
-                //DEBUGNOW
-                if (File.Exists(ihExtPath))
-                {
+            if (bs.release) {
+                if (File.Exists(bs.ihExtPath)) {
                     Console.WriteLine("copying IHExt");
-                    string destPath = makebiteBuildPath + @"\GameDir\mod\";
-                    if (!Directory.Exists(destPath))
-                    {
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\" + bs.externalInstallSubPath + @"\";
+                    if (!Directory.Exists(destPath)) {
                         Directory.CreateDirectory(destPath);
                     }
-                    File.Copy(ihExtPath, destPath + "IHExt.exe");
+                    File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
                 }
 
-
-                if (Directory.Exists(docsPathFull)) {
-                    Console.WriteLine("copying docs files to makebite folder");
-                    string docsDestinationPath = makebiteBuildPath + @"\GameDir\mod\docs\";
-                    if (!Directory.Exists(docsDestinationPath)) {
-                        Directory.CreateDirectory(docsDestinationPath);
+                if (File.Exists(bs.ihHookPath)) {
+                    Console.WriteLine("copying IHHook");
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\";
+                    if (!Directory.Exists(destPath)) {
+                        Directory.CreateDirectory(destPath);
                     }
-                    CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(docsDestinationPath), "", "");
-
-                    docsDestinationPath = buildFolder + @"\docs";
-                    if (Directory.Exists(docsDestinationPath)) {
-                        DeleteAndWait(docsDestinationPath);
-                        Directory.CreateDirectory(docsDestinationPath);
-                    } 
-                    CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(docsDestinationPath), "", "");
-                    
-                    Console.WriteLine("copying docs to ExternalLuaRelease folder");
-                    if (Directory.Exists(externalLuaPathFullRelease + "\\docs\\")) {
-                        CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(externalLuaPathFullRelease + "\\docs\\"), "", "");
-                    }
+                    File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
                 }
             }
 
-            //tex get version from readme, superhax i know
-            string modVersion = modVersionDefault;
-            
-            if (File.Exists(readmePathFull)) {
-                string[] readmeLines = File.ReadAllLines(readmePathFull);
-                // ASSUMPTION: version on 2nd line, 1st chars
-                if (readmeLines.Length > 1) {
-                    char[] splitchar = { ' ' };
-                    string[] split = readmeLines[1].Split(splitchar);
-                    if (split.Length != 0) {
-                        modVersion = split[0];
-                    }
-                }
-            }
+
+            string modVersion = bs.modVersionDefault;
+
+            string readmePathFull = bs.docsPath + "\\" + bs.readMeName;//DEBUGNOW
+
+            modVersion = GetModVersion(modVersion, readmePathFull);
             Console.WriteLine("got modVersion:{0}", modVersion);
 
             Console.WriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
-            TraverseTree(luaPath+@"\Data1Lua", ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
-            TraverseTree(luaPath + @"\FpkdCombinedLua", ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            TraverseTree(bs.luaDataFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            TraverseTree(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             //tex allow text files as subsituted
             //TraverseTree(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
             if (modFilesInfo.Count == 0) {
@@ -205,26 +191,19 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            //tex figure out qar build folder
-            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
-                if (buildFileInfo.doBuild) {
-                    if (IsForFpk(buildFileInfo)) {
-                        buildFileInfo.qarPath = "\\" + Path.GetFileName(buildFileInfo.packPath);
-                        buildFileInfo.qarPath = buildFileInfo.qarPath.Replace(".", "_");
-                    } else {
-                        buildFileInfo.qarPath = targetGameArchiveSubpath;
-                    }
-                }
-            }
-
+            /*
             Console.WriteLine();
             Console.WriteLine("building list of fpks used");
             Dictionary<string, List<BuildFileInfo>> fpks = new Dictionary<string, List<BuildFileInfo>>();
-            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
-                if (buildFileInfo.doBuild) {
-                    if (IsForFpk(buildFileInfo)) {
+            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values)
+            {
+                if (buildFileInfo.doBuild)
+                {
+                    if (IsForFpk(buildFileInfo))
+                    {
                         List<BuildFileInfo> filesForFpk;
-                        if (!fpks.TryGetValue(buildFileInfo.packPath, out filesForFpk)) {
+                        if (!fpks.TryGetValue(buildFileInfo.packPath, out filesForFpk))
+                        {
                             filesForFpk = new List<BuildFileInfo>();
                             fpks.Add(buildFileInfo.packPath, filesForFpk);
                             Console.WriteLine("fpklistadd:" + buildFileInfo.packPath);
@@ -234,34 +213,39 @@ namespace mgsv_buildmod {
                     }
                 }
             }
+            */
 
             Console.WriteLine();
             Console.WriteLine("copying mod files to build folder");
             foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
                 if (buildFileInfo.doBuild) {
-                    string buildBaseFolder = buildFolder;
-                    string luaFileDestination = makebiteBuildPath + buildFileInfo.filePath;
+                    string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
                     if (IsForFpk(buildFileInfo)) {
-                        string cleanPackFolderBuildPath = buildFolder + modPackFilesSubpath + buildFileInfo.qarPath;
-                        luaFileDestination = cleanPackFolderBuildPath + buildFileInfo.filePath;
-                        if (copyFpkLoose) {
-                            luaFileDestination = makebiteBuildPath + buildFileInfo.packPath;
-                            luaFileDestination = luaFileDestination.Replace(".", "_");
-                            luaFileDestination += buildFileInfo.filePath;
-                        }
+                        string packPath = buildFileInfo.packPath.Replace(".", "_");
+                        string internalPath = buildFileInfo.fullPath.Substring(bs.luaPackFilesPath.Length);
+                        luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
                     }
-                    Console.WriteLine(buildFileInfo.filePath);
+                    else {
+                        //DEBUGNOW KLUDGE
+                        var sourcePath = bs.luaDataFilesPath;
+                        var targetPath = bs.makebiteBuildPath;
+
+                        luaFileDestination = buildFileInfo.fullPath.Replace(sourcePath, targetPath);
+                    }
+                    Console.WriteLine(luaFileDestination);
 
                     //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
                     //having DOBUILD (example in externallua or mockfox)
                     //I should just restrict buildfileinfo to data1,
                     string dir = Path.GetDirectoryName(luaFileDestination);
-                    Directory.CreateDirectory(dir);
+                    if (!Directory.Exists(dir)) {
+                        Directory.CreateDirectory(dir);
+                    }
                     File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
                 }
             }
 
-            if (buildLng2s) {
+            if (bs.buildLng2s) {
                 Console.WriteLine("building lng2s");
                 //tex copy over lang files to other lang coded
                 List<string> langCodes = new List<string> {
@@ -286,16 +270,16 @@ namespace mgsv_buildmod {
 
                 //TODO
                 // \Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui
-                //for .lng2.xml files in processfolderpath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
+                //for .lng2.xml files in modPackPath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
                 //strip filename of .eng.lng2.xml?
 
                 string lngPackPathTotal = @"\Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui\";
 
-                foreach (string processFolderPath in processFolders) {
-                    if (!Directory.Exists(processFolderPath)) {
+                foreach (string modPackPath in bs.modPackPaths) {
+                    if (!Directory.Exists(modPackPath)) {
                         continue;
                     }
-                    string totalPath = processFolderPath + lngPackPathTotal;
+                    string totalPath = modPackPath + lngPackPathTotal;
                     if (!Directory.Exists(totalPath)) {
                         continue;
                     }
@@ -310,11 +294,11 @@ namespace mgsv_buildmod {
                             string trimString = ".eng.lng2.xml";
                             int trimPos = langFilePre.Length - trimString.Length;
                             langFilePre = langFilePre.Remove(trimPos, trimString.Length);
-                            string langFileEng = processFolderPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
+                            string langFileEng = modPackPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
                             langFileEng = UnfungePath(langFileEng);
 
 
-                            string langFileDest = processFolderPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
+                            string langFileDest = modPackPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
                             langFileDest = UnfungePath(langFileDest);
 
                             File.Copy(langFileEng, langFileDest, true);
@@ -325,7 +309,7 @@ namespace mgsv_buildmod {
                 }
 
 
-                foreach (string path in processFolders) {
+                foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         TraverseTree(path, ".xml", RunLangToolProcess, ref modFilesInfo);
 
@@ -334,55 +318,56 @@ namespace mgsv_buildmod {
                 }
             }
 
-            if (buildFox2s) {
+            if (bs.buildFox2s) {
                 Console.WriteLine("building fox2s");
-                foreach (string path in processFolders) {
+                foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         TraverseTree(path, ".xml", RunFoxToolProcess, ref modFilesInfo);
                     }
                 }
             }
 
-            if (buildSubps) {
+            bs.buildSubps = false;//DEBUGNOW 
+            if (bs.buildSubps) {
                 Console.WriteLine("building subps");
-                foreach (string path in processFolders) {
+                foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         TraverseTree(path, ".xml", RunSubpToolProcess, ref modFilesInfo);
                     }
                 }
             }
 
-            if (copyProcessFolders) {
+            if (bs.copyModPackFolders) {
                 Console.WriteLine();
-                Console.WriteLine("copying processFolders folder");
-                foreach (string path in processFolders) {
+                Console.WriteLine("copying modPackPaths folders");
+                foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
-                        CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(makebiteBuildPath), "", ".xml");
+                        CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", ".xml");
                     }
                 }
             }
 
-            if (copyExternalLua && release) {
+            if (bs.copyExternalLua) {
                 Console.WriteLine();
 
-                Console.WriteLine("copying ExternalLuaRelease folder to build");
+                Console.WriteLine("copying external folder to build");
 
-                if (Directory.Exists(externalLuaPathFullRelease)) {
-                    string destPath = makebiteBuildPath + @"\GameDir\mod\";
+                if (Directory.Exists(bs.externalLuaPath)) {
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\" + bs.externalInstallSubPath + @"\";
                     Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(externalLuaPathFullRelease), new DirectoryInfo(destPath), "", "");
+                    CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
 
 
-            string snakeBiteMgvsDestFilePath = buildFolder + "\\" + modFileName + ".mgsv";
-            string snakeBiteMgvsFilePath = makebiteBuildPath + "\\" + "mod.mgsv";
+            string snakeBiteMgvsDestFilePath = bs.buildFolder + "\\" + bs.modFileName + ".mgsv";
+            string snakeBiteMgvsFilePath = bs.makebiteBuildPath + "\\" + "mod.mgsv";
             snakeBiteMgvsFilePath = UnfungePath(snakeBiteMgvsFilePath);
-            string snakeBiteMetaDataFilePath = buildFolder + "\\" + "metadata.xml";
-            string snakeBiteMetaDataDestFilePath = makebiteBuildPath + "\\" + "metadata.xml";
-            string snakeBiteReadMeFilePath = docsPathFull + "\\" + readMeName;
+            string snakeBiteMetaDataFilePath = bs.buildFolder + "\\" + "metadata.xml";
+            string snakeBiteMetaDataDestFilePath = bs.makebiteBuildPath + "\\" + "metadata.xml";
+            string snakeBiteReadMeFilePath = bs.docsPath + "\\" + bs.readMeName;
             snakeBiteReadMeFilePath = UnfungePath(snakeBiteReadMeFilePath);
-            string snakeBiteReadMeDestFilePath = makebiteBuildPath + "\\" + "readme.txt";
+            string snakeBiteReadMeDestFilePath = bs.makebiteBuildPath + "\\" + "readme.txt";
             snakeBiteReadMeDestFilePath = UnfungePath(snakeBiteReadMeDestFilePath);
 
 
@@ -411,15 +396,15 @@ namespace mgsv_buildmod {
                 File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
             }
 
-            if (release == false) {
+            if (bs.release == false && bs.cleanDat) {
                 Console.WriteLine("Deleting sbmods.xml");
-                string sbmodFilePath = gamePath + "\\snakebite.xml";
-                string sbmodCleanFilePath = gamePath + "\\snakebiteclean.xml";
+                string sbmodFilePath = bs.gamePath + "\\snakebite.xml";
+                string sbmodCleanFilePath = bs.gamePath + "\\snakebiteclean.xml";
                 if (File.Exists(sbmodFilePath)) {
                     File.Copy(sbmodCleanFilePath, sbmodFilePath, true);
                 }
 
-                string patchPath = gamePath + gameArchiveSubpath + targetGamePatchFolder0Subpath;
+                string patchPath = bs.gamePath + bs.gameArchiveSubpath + bs.targetGamePatchFolder0Subpath;
                 string sbclean00PathFull = patchPath + "\\" + "00.dat.sbclean";
                 string target00 = patchPath + "\\00.dat";
 
@@ -427,36 +412,44 @@ namespace mgsv_buildmod {
                 if (File.Exists(sbclean00PathFull)) {
                     File.Copy(sbclean00PathFull, target00, true);
                 }
+
+                string sbclean01PathFull = patchPath + "\\" + "01.dat.sbclean";
+                string target01 = patchPath + "\\01.dat";
+
+                Console.WriteLine("restoring 01.dat");
+                if (File.Exists(sbclean01PathFull)) {
+                    File.Copy(sbclean01PathFull, target01, true);
+                }
             }
 
 
-            if (makeMod) {
+            if (bs.makeMod) {
                 Console.WriteLine("makebite building " + snakeBiteMgvsFilePath);
                 string toolArgs = "";
-                toolArgs += makebiteBuildPath;
+                toolArgs += bs.makebiteBuildPath;
                 UseTool(makeBitePath, toolArgs);
-            } else {
-                Console.WriteLine("done.");
-                Console.ReadKey();
+
+                if (!File.Exists(snakeBiteMgvsFilePath)) {
+                    Console.WriteLine("Error! Cannot find " + snakeBiteMgvsFilePath);
+                    Console.ReadKey();
+                    return;
+                }
+                else {
+                    Console.WriteLine("Copying built msgv");
+                    File.Copy(snakeBiteMgvsFilePath, snakeBiteMgvsDestFilePath, true);
+                    string lastBuildPath = bs.projectPath + "\\" + bs.modFileName + ".mgsv";
+                    File.Copy(snakeBiteMgvsFilePath, lastBuildPath, true);
+                }
             }
 
-            if (!File.Exists(snakeBiteMgvsFilePath)) {
-                Console.WriteLine("Error! Cannot find " + snakeBiteMgvsFilePath);
-                Console.ReadKey();
-                return;
-            } else {
-                Console.WriteLine("Copying built msgv");
-                File.Copy(snakeBiteMgvsFilePath, snakeBiteMgvsDestFilePath, true);
-                string lastBuildPath = projectPath + "\\" + modFileName + ".mgsv";
-                File.Copy(snakeBiteMgvsFilePath, lastBuildPath, true);
-            }
 
+            if (bs.release == false) {
+                if (bs.installOtherMods) {
+                    Console.WriteLine("running snakebite on othermods");
+                    TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess, ref modFilesInfo);
+                }
 
-            if (release == false) {
-                Console.WriteLine("running snakebite on othermods");
-                TraverseTree(otherMgsvsPathFull, ".mgsv", RunSnakeBiteProcess, ref modFilesInfo);
-
-                if (installMod) {
+                if (bs.installMod) {
                     Console.WriteLine("running snakebite on mod");
                     string snakeBiteMgsvPath = "\"" + snakeBiteMgvsFilePath + "\"";
                     string snakeBiteArgs = "";
@@ -470,9 +463,25 @@ namespace mgsv_buildmod {
             }
 
             Console.WriteLine("done");
-            if (waitEnd) {
+            if (bs.waitEnd) {
                 Console.ReadKey();
             }
+        }
+        //tex get version from readme, superhax i know
+        private static string GetModVersion(string modVersion, string readmePathFull) {
+            if (File.Exists(readmePathFull)) {
+                string[] readmeLines = File.ReadAllLines(readmePathFull);
+                // ASSUMPTION: version on 2nd line, 1st chars
+                if (readmeLines.Length > 1) {
+                    char[] splitchar = { ' ' };
+                    string[] split = readmeLines[1].Split(splitchar);
+                    if (split.Length != 0) {
+                        modVersion = split[0];
+                    }
+                }
+            }
+
+            return modVersion;
         }
 
         private static void DeleteAndWait(string path) {
@@ -484,63 +493,7 @@ namespace mgsv_buildmod {
             }
         }
 
-        /*
-        private static void CleanAllFpks(Dictionary<string, List<BuildFileInfo>> fpks) {
-            foreach (var item in fpks) {
-                BuildFileInfo buildFileInfo = item.Value[0];
 
-                string cleanPackFileName = Path.GetFileName(item.Key);
-                string cleanPackFileBuildPath = buildFolder + modPackFilesSubpath + "\\" + cleanPackFileName;
-                string cleanPackFolderBuildPath = buildFolder + modPackFilesSubpath + buildFileInfo.qarPath;
-
-                //tex ASSUMPTION: only one patch .dat
-                string cleanPackFilePatchSourcePath = cleanDataPath + targetGamePatchFolder0Subpath + patchArchive00Subpath + buildFileInfo.packPath;
-                string cleanPackFileSourcePath = cleanDataPath + "\\" + buildFileInfo.originalQar + buildFileInfo.packPath;
-
-                Console.WriteLine("deleting buildFolder " + cleanPackFileName + " and folder");
-
-                if (Directory.Exists(cleanPackFolderBuildPath)) {
-                    Directory.Delete(cleanPackFolderBuildPath, true);
-                }
-                if (File.Exists(cleanPackFileBuildPath)) {
-                    File.Delete(cleanPackFileBuildPath);
-                }
-
-                Console.WriteLine();
-                Console.WriteLine("finding clean fpk in cleanDataPath");
-
-                string foundPath = "";
-                if (File.Exists(cleanPackFilePatchSourcePath)) {
-                    foundPath = cleanPackFilePatchSourcePath;
-                    Console.WriteLine("found in patch path");
-                } else if (File.Exists(cleanPackFileSourcePath)) {
-                    foundPath = cleanPackFileSourcePath;
-                    Console.WriteLine("found in base path");
-                }
-
-                if (foundPath == "") {
-                    // if (!allowExtractData) {
-                    Console.WriteLine("could not find extracted pack " + cleanPackFileSourcePath);
-                    break;
-                    //  } else {
-                    //tex TODO: find chunk dat
-                    // extract chunk dat
-                    // try and find fpk again
-                    //  }
-                } else {
-                    Console.WriteLine();
-                    Console.WriteLine("copying clean pack " + cleanPackFileName);
-                    Directory.CreateDirectory(Path.GetDirectoryName(cleanPackFileBuildPath));
-                    File.Copy(foundPath, cleanPackFileBuildPath, true);
-
-                    Console.WriteLine();
-                    Console.WriteLine("extracting " + cleanPackFileName);
-                    string output = UsePackTool(cleanPackFileBuildPath, false);
-                    Console.WriteLine(output);
-                }
-            }
-        }
-        */
 
         private static bool IsForFpk(BuildFileInfo buildFileInfo) {
             return buildFileInfo.packPath != "";
@@ -559,10 +512,12 @@ namespace mgsv_buildmod {
                 string[] subDirs;
                 try {
                     subDirs = System.IO.Directory.GetDirectories(currentDir);
-                } catch (UnauthorizedAccessException e) {
+                }
+                catch (UnauthorizedAccessException e) {
                     Console.WriteLine(e.Message);
                     continue;
-                } catch (System.IO.DirectoryNotFoundException e) {
+                }
+                catch (System.IO.DirectoryNotFoundException e) {
                     Console.WriteLine(e.Message);
                     continue;
                 }
@@ -570,10 +525,12 @@ namespace mgsv_buildmod {
                 string[] files = null;
                 try {
                     files = System.IO.Directory.GetFiles(currentDir);
-                } catch (UnauthorizedAccessException e) {
+                }
+                catch (UnauthorizedAccessException e) {
                     Console.WriteLine(e.Message);
                     continue;
-                } catch (System.IO.DirectoryNotFoundException e) {
+                }
+                catch (System.IO.DirectoryNotFoundException e) {
                     Console.WriteLine(e.Message);
                     continue;
                 }
@@ -585,7 +542,8 @@ namespace mgsv_buildmod {
                         if (fi.Extension == extension) {
                             processFile(fi, ref buildFileInfoList);
                         }
-                    } catch (System.IO.FileNotFoundException e) {
+                    }
+                    catch (System.IO.FileNotFoundException e) {
                         Console.WriteLine(e.Message);
                         continue;
                     }
@@ -659,10 +617,6 @@ namespace mgsv_buildmod {
                         }
                         break;
                         */
-                    case "FILEPATH:":
-                        System.Console.WriteLine(line);
-                        buildFileInfo.filePath = attribValue;
-                        break;
                     case "PACKPATH:":
                         System.Console.WriteLine(line);
                         buildFileInfo.packPath = attribValue;
@@ -675,21 +629,30 @@ namespace mgsv_buildmod {
                     // find 'data' 'pack' - set type
                     // what about orginail archive? useful to more quickly find the inf/tool xml
                     // figure out filepath /root (ie \archive\tpp\blah
-
-                    if (fileInfo.FullName.Contains(luaDataFilesSubpath)) {
+                    /*
+                    if (fileInfo.FullName.Contains(luaDataFilesSubpath))
+                    {
                         // buildFileInfo.originalQar = "data1_dat";
 
                         buildFileInfo.filePath = fileInfo.FullName.Substring(luaDataFilesPathFull.Length);
-                    } else if (fileInfo.FullName.Contains(luaPackFilesSubPath)) {
+                    } else if (fileInfo.FullName.Contains(luaPackFilesSubPath))
+                    {
                         buildFileInfo.filePath = fileInfo.FullName.Substring(luaPackFilesPathFull.Length);
                     }
-                } else {
-                    if (buildFileInfo.filePath != "") {
+                    */
+                }
+                /* //CULL
+                 * else
+                {
+                    if (buildFileInfo.filePath != "")
+                    {
                         buildFileInfo.fullPath = fileInfo.DirectoryName + buildFileInfo.filePath;
-                    } else {
+                    } else
+                    {
                         Console.WriteLine("cannot find FILEPATH: for " + fileInfo.FullName);
                     }
                 }
+                */
             }
         }
 
@@ -717,7 +680,7 @@ namespace mgsv_buildmod {
         public static void RunFoxToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
             bool isFox2Type = false;
             foreach (string fox2Type in fox2Types) {
-                if (fileInfo.Name.Contains(fox2Type+".xml")) {
+                if (fileInfo.Name.Contains(fox2Type + ".xml")) {
                     isFox2Type = true;
                     break;
                 }
@@ -809,6 +772,19 @@ namespace mgsv_buildmod {
             }
         }
 
+        private static string GetPath(string path) {
+            if (Directory.Exists(path) || File.Exists(path)) {
+                if (!Path.IsPathRooted(path)) {
+                    path = Path.GetFullPath(path);
+                }
+            }
+            else {
+                path = null;
+            }
+
+            return path;
+        }
+
 
         static void DeleteEmptyDirs(string dir) {
             if (String.IsNullOrEmpty(dir))
@@ -826,9 +802,12 @@ namespace mgsv_buildmod {
                 if (!entries.Any()) {
                     try {
                         Directory.Delete(dir);
-                    } catch (UnauthorizedAccessException) { } catch (DirectoryNotFoundException) { }
+                    }
+                    catch (UnauthorizedAccessException) { }
+                    catch (DirectoryNotFoundException) { }
                 }
-            } catch (UnauthorizedAccessException) { }
+            }
+            catch (UnauthorizedAccessException) { }
         }
     }
 }
