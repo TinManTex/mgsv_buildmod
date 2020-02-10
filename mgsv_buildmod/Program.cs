@@ -17,8 +17,11 @@ namespace mgsv_buildmod {
         static string projectPath = ConfigurationManager.AppSettings.Get("projectPath");
         static string projectDataFilesSubpath = @"\Data";// in respect to project path
         static string projectPackFilesSubPath = @"\fpkcombined";
+        static string projectCustomPackFilesSubPath = @"\customfpk";
+
         static string projectDataFilesPathFull = projectPath + projectDataFilesSubpath;
         static string projectPackFilesPathFull = projectPath + projectPackFilesSubPath;
+        static string projectCustomPackFilesPathFull = projectPath + projectCustomPackFilesSubPath;
 
         static string modBuildPath = ConfigurationManager.AppSettings.Get("modBuildPath");
         static string modPackFilesSubpath = @"\packFiles";
@@ -27,21 +30,33 @@ namespace mgsv_buildmod {
 
         static string gzsToolPath = ConfigurationManager.AppSettings.Get("gzsToolPath");
         static string langToolPath = ConfigurationManager.AppSettings.Get("langToolPath");
+        static string foxToolPath = ConfigurationManager.AppSettings.Get("foxToolPath");
         //static string makeBitePath = ConfigurationManager.AppSettings.Get("makeBitePath");
         //static string snakeBitePath = ConfigurationManager.AppSettings.Get("snakeBitePath");
 
-        //static string makeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite_0.6\makebite.exe";
-        //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite_0.6\snakebite.exe";
+        //static string makeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite_0.61\makebite.exe";
+        //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite_0.61\snakebite.exe";
 
-        static string makeBitePath = @"D:\Projects\MGS\snakebite\SB0511\makebite.exe";
-        static string snakeBitePath = @"D:\Projects\MGS\snakebite\SB0511\snakebite.exe";
+        static string makeBitePath = @"D:\Games\[Utils]\[MGSV]\SnakeBite\makebite.exe";
+        static string snakeBitePath = @"D:\Games\[Utils]\[MGSV]\SnakeBite\snakebite.exe";
+
+        //static string makeBitePath = @"D:\Projects\MGS\snakebite\SB0511\makebite.exe";
+        //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SB0511\snakebite.exe";
+
+        //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite-0.5.11src00dat\SnakeBite\bin\Debug\snakebite.exe";
+        //static string makeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite-0.8src\makebite\bin\Debug\makebite.exe";
+        //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite-0.8src\SnakeBite\bin\Debug\snakebite.exe";
+
+        
+
+        static string langFilePath = @"D:\Projects\MGS\InfiniteHeavenLDT\InfiniteHeaven\src\Data\Assets\tpp\script\lib\InfLang.lua";
 
         static string gamePath = ConfigurationManager.AppSettings.Get("gamePath");
 
         static string cleanDataPath = ConfigurationManager.AppSettings.Get("cleanDataPath");
         static string gameArchiveSubpath = @"\master";
         static string targetGamePatchFolder0Subpath = @"\0";
-        static string patchArchive00Subpath = "\\00";
+        //static string patchArchive00Subpath = "\\00";
 
         static string targetGameArchiveSubpath = "\\01";
 
@@ -79,11 +94,17 @@ namespace mgsv_buildmod {
 
             //bool wantCleanFpks = false;
 
-            bool buildLng2s = true;
+            bool buildLng2s = false;
+            bool buildFox2s = true;
+            bool copyCustomFpks = true;
+            bool buildCustomFpkss = true;
+
+            bool customfpkfix = true;
 
             if (args.Length != 0) {
                 foreach (string arg in args) {
                     if (arg == "quickbuild") {
+                        Console.WriteLine("running in quickbuild");
                         quickBuild = true;
                     }
                 }
@@ -107,6 +128,10 @@ namespace mgsv_buildmod {
                     }
                 }
             }
+
+            Console.WriteLine("copying lang file");
+            string langFileDest = buildFolder + "\\InfLang.txt";
+            File.Copy(langFilePath, langFileDest,true);
 
             Console.WriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
@@ -184,7 +209,7 @@ namespace mgsv_buildmod {
                             luaFileDestination += buildFileInfo.filePath;
                         }
                     }
-                    Console.WriteLine(luaFileDestination);
+                    Console.WriteLine(buildFileInfo.filePath);
 
                     Directory.CreateDirectory(Path.GetDirectoryName(luaFileDestination));
                     File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
@@ -217,21 +242,40 @@ namespace mgsv_buildmod {
                     Console.WriteLine("copying pack folder" + buildFileInfo.qarPath);
                     //Directory.CreateDirectory(Path.GetDirectoryName(packQarFolder));
                     //File.Copy(cleanPackFileBuildPath, packQarFolder, true);
-                    CopyFilesRecursively(new DirectoryInfo(cleanPackFolderBuildPath), new DirectoryInfo(packQarFolder));
+                    CopyFilesRecursively(new DirectoryInfo(cleanPackFolderBuildPath), new DirectoryInfo(packQarFolder),"","");
                 }
             }
 
             if (buildLng2s) {
-                Console.WriteLine("building lng2s");// TODO, build them in modfolder instead (then delete lng.xml in modfolder).
+                Console.WriteLine("building lng2s");
                 TraverseTree(modBuildPath, ".xml", RunLangToolProcess, ref modFilesInfo);
-
 
                 TraverseTree(modBuildPath, ".xml", DeleteLng2XmlProcess, ref modFilesInfo);
             }
 
+            if (buildFox2s) {
+                Console.WriteLine("building fox2s");
+                TraverseTree(projectPath, ".xml", RunFoxToolProcess, ref modFilesInfo);      
+            }
+
+            if (buildCustomFpkss) {
+                //Console.WriteLine("building fox2s");
+                //TraverseTree(projectCustomPackFilesPathFull, ".xml", RunFoxToolProcess, ref modFilesInfo);
+                Console.WriteLine("building custom fpks");//tex cause snakede done be borke for some shit
+                //TraverseTree(modBuildPath, ".xml", RunGzToolProcess, ref modFilesInfo);
+                TraverseTree(projectPath, ".xml", RunGzToolProcess, ref modFilesInfo);
+                //
+            }
+
+            if (copyCustomFpks) {
+                Console.WriteLine();
+                Console.WriteLine("copying custom pack folder");
+                CopyFilesRecursively(new DirectoryInfo(projectCustomPackFilesPathFull), new DirectoryInfo(modBuildPath), "", ".xml");
+            }
+
 
             string snakeBiteMgvsDestFilePath = buildFolder + "\\" + modFileName + " " + modVersion + ".mgsv";
-            string snakeBiteMgvsFilePath = modBuildPath + "\\" + modFileName + ".mgsv";
+            string snakeBiteMgvsFilePath = modBuildPath + "\\" + "mod.mgsv";
             snakeBiteMgvsFilePath = UnfuckPath(snakeBiteMgvsFilePath);
             string snakeBiteMetaDataFilePath = buildFolder + "\\" + "metadata.xml";
             string snakeBiteMetaDataDestFilePath = modBuildPath + "\\" + "metadata.xml";
@@ -240,20 +284,12 @@ namespace mgsv_buildmod {
             string snakeBiteReadMeDestFilePath = modBuildPath + "\\" + "readme.txt";
             snakeBiteReadMeDestFilePath = UnfuckPath(snakeBiteReadMeDestFilePath);
 
-            /*if (File.Exists(snakeBiteMgvsFilePath)) {
-                File.Delete(snakeBiteMgvsFilePath);
-            }*/
-
-            /*
             Console.WriteLine("Deleting sbmods.xml");
-            string sbmodFilePath = gamePath + "\\sbmods.xml";
-            if (File.Exists(sbmodFilePath)) {
-                File.Delete(sbmodFilePath);
+            string sbmodFilePath = gamePath + "\\snakebite.xml";
+            string sbmodCleanFilePath = gamePath + "\\snakebiteclean.xml";
+            if (!quickBuild && File.Exists(sbmodFilePath)) {
+                File.Copy(sbmodCleanFilePath,sbmodFilePath,true);
             }
-            while (File.Exists(sbmodFilePath)) {
-                Thread.Sleep(100);
-            }
-            */
 
             Console.WriteLine("Updating metadata version tag");
             if (File.Exists(snakeBiteMetaDataFilePath)) {
@@ -279,6 +315,22 @@ namespace mgsv_buildmod {
                 File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
             }
 
+            string patchPath = gamePath + gameArchiveSubpath + targetGamePatchFolder0Subpath;
+           // string backup00Name = "00.dat.original";
+           // string backup01Name = "01.dat.original";
+           // string backup00PathFull = patchPath + "\\" + backup00Name;
+            //string backup01PathFull = patchPath + "\\" + backup01Name;
+            string sbclean00PathFull = patchPath + "\\" + "00.dat.sbclean";
+            string target00 = patchPath + "\\00.dat";
+           // string target01 = patchPath + "\\01.dat";
+
+            if (!quickBuild) {
+                Console.WriteLine("restoring 00.dat");
+                if (File.Exists(sbclean00PathFull)) {
+                    File.Copy(sbclean00PathFull, target00, true);
+                }
+            }
+
             if (makeMod) {
                 Console.WriteLine("makebite building " + snakeBiteMgvsFilePath);
                 string toolArgs = "";
@@ -287,6 +339,28 @@ namespace mgsv_buildmod {
             } else {
                 Console.WriteLine("done.");
                 Console.ReadKey();
+            }
+
+            //
+            if (customfpkfix) {
+                string extractPath = modBuildPath + "\\mod";
+
+                string toolArgs = " x ";
+                toolArgs += snakeBiteMgvsFilePath;
+                toolArgs += " -o" + extractPath;
+                UseTool(@".\7za.exe", toolArgs);
+
+                Console.WriteLine("copying custom pack fpkds");
+                CopyFilesRecursively(new DirectoryInfo(projectCustomPackFilesPathFull), new DirectoryInfo(extractPath), ".fpkd","");
+
+                Console.WriteLine("deleting .mgsv");
+                if (File.Exists(snakeBiteMgvsFilePath)) {
+                    File.Delete(snakeBiteMgvsFilePath);
+                }
+                //TODO: REPACK
+                toolArgs = " a -tzip " + snakeBiteMgvsFilePath + " " +  extractPath  +"\\*.* -r";
+
+                UseTool(@".\7za.exe", toolArgs);
             }
 
             if (!File.Exists(snakeBiteMgvsFilePath)) {
@@ -298,25 +372,16 @@ namespace mgsv_buildmod {
                 File.Copy(snakeBiteMgvsFilePath, snakeBiteMgvsDestFilePath, true);
             }
 
-            if (!quickBuild) {
-                Console.WriteLine("restoring 01.dat");
-                string patchPath = gamePath + gameArchiveSubpath + targetGamePatchFolder0Subpath;
-                string backupName = "01.dat.backup";
-                string backupPathFull = patchPath + "\\" + backupName;
-                string target = patchPath + "\\01.dat";
-                if (File.Exists(backupPathFull)) {
-                    File.Copy(backupPathFull, target, true);
-                }
-            }
-
             Console.WriteLine("running snakebite");
-            string snakeBiteArgs = "-i " + "\"" + snakeBiteMgvsFilePath + "\"";
-            snakeBiteArgs += " -c -x";
+            string snakeBiteArgs = "\"" + snakeBiteMgvsFilePath + "\"";
+            snakeBiteArgs += " -i";//install
+            snakeBiteArgs += " -c";//no conflict check
+            snakeBiteArgs += " -d";//reset hash
+            snakeBiteArgs += " -x";//exit
             if (installMod) {
                 UseTool(snakeBitePath, snakeBiteArgs);
             }
             //tex TODO: check if 01.dat was actually modded
-
 
             Console.WriteLine("done");
             if (waitEnd) {
@@ -465,7 +530,7 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            Console.WriteLine(fileInfo.FullName);
+            Console.WriteLine(fileInfo.Name);
 
             BuildFileInfo buildFileInfo = null;
             if (!buildFileInfoList.TryGetValue(fileInfo.FullName, out buildFileInfo)) {
@@ -560,6 +625,22 @@ namespace mgsv_buildmod {
             }
         }
 
+        public static void RunFoxToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+            if (!fileInfo.Name.Contains(".fox2.xml")) {
+                return;
+            }
+
+            UseTool(foxToolPath, fileInfo.FullName);
+        }
+
+        public static void RunGzToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+            if (!fileInfo.Name.Contains(".fpk.xml") && !fileInfo.Name.Contains(".fpkd.xml")) {
+                return;
+            }
+
+            UseTool(gzsToolPath, fileInfo.FullName);
+        }
+
         private static string UsePackTool(string packPath, bool pack) {
             // Start the child process.
             Process p = new Process();
@@ -584,6 +665,8 @@ namespace mgsv_buildmod {
 
 
         private static void UseTool(string toolPath, string args) {
+            Console.WriteLine(toolPath);
+            Console.WriteLine(args);
             Process p = new Process();
             p.StartInfo.UseShellExecute = false;
             // p.StartInfo.RedirectStandardOutput = true;
@@ -597,11 +680,16 @@ namespace mgsv_buildmod {
             // return output;
         }
 
-        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target) {
+        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target, string extension, string exclude) {
             foreach (DirectoryInfo dir in source.GetDirectories())
-                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
+                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name), extension, exclude);
             foreach (FileInfo file in source.GetFiles()) {
-                File.Copy(file.FullName, Path.Combine(target.FullName, file.Name), true);
+                if (exclude=="" || file.Extension != exclude) {
+                    if (extension == "" || file.Extension == extension) {
+                        Console.WriteLine(file.Name);
+                        File.Copy(file.FullName, Path.Combine(target.FullName, file.Name), true);
+                    }
+                }
             }
         }
     }
