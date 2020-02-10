@@ -56,6 +56,8 @@ namespace mgsv_buildmod {
 
         static string targetGameArchiveSubpath = "\\01";
 
+        static string ihExtPath = ConfigurationManager.AppSettings.Get("ihExtPath");
+
 
         //static string lngPackName = "";
 
@@ -63,6 +65,9 @@ namespace mgsv_buildmod {
         static string modVersionDefault = "rXXX";
         static string modFileName = "Infinite Heaven";
         static string readMeName = "Infinite Heaven Readme.txt";
+
+
+        static string readmePathFull = docsPathFull + "\\" + readMeName;
 
         public class BuildFileInfo {
             public string fullPath = "";
@@ -104,7 +109,13 @@ namespace mgsv_buildmod {
                 if (s == "-release") {
                     release = true;
                 }
+                if (s == "-nofoxtool") {
+                    buildLng2s = false;
+                    buildSubps = false;
+                    buildFox2s = false;
+                }
             }
+
 
             if (release) {
                 Console.WriteLine("doing release build");
@@ -129,18 +140,46 @@ namespace mgsv_buildmod {
             Console.WriteLine("deleting existing makebite build folder");
             DeleteAndWait(makebiteBuildPath);//tex GOTCHA will complain if open in explorer
 
-            string docsDestinationPath = makebiteBuildPath + @"\GameDir\mod\docs\";
-            if (Directory.Exists(docsPathFull)) {
-                Console.WriteLine("copying docs files");
-                if (!Directory.Exists(docsDestinationPath)) {
-                    Directory.CreateDirectory(docsDestinationPath);
+
+            if (release) {
+                //DEBUGNOW
+                if (File.Exists(ihExtPath))
+                {
+                    Console.WriteLine("copying IHExt");
+                    string destPath = makebiteBuildPath + @"\GameDir\mod\";
+                    if (!Directory.Exists(destPath))
+                    {
+                        Directory.CreateDirectory(destPath);
+                    }
+                    File.Copy(ihExtPath, destPath + "IHExt.exe");
                 }
-                CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(docsDestinationPath), "", "");   
+
+
+                if (Directory.Exists(docsPathFull)) {
+                    Console.WriteLine("copying docs files to makebite folder");
+                    string docsDestinationPath = makebiteBuildPath + @"\GameDir\mod\docs\";
+                    if (!Directory.Exists(docsDestinationPath)) {
+                        Directory.CreateDirectory(docsDestinationPath);
+                    }
+                    CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(docsDestinationPath), "", "");
+
+                    docsDestinationPath = buildFolder + @"\docs";
+                    if (Directory.Exists(docsDestinationPath)) {
+                        DeleteAndWait(docsDestinationPath);
+                        Directory.CreateDirectory(docsDestinationPath);
+                    } 
+                    CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(docsDestinationPath), "", "");
+                    
+                    Console.WriteLine("copying docs to ExternalLuaRelease folder");
+                    if (Directory.Exists(externalLuaPathFullRelease + "\\docs\\")) {
+                        CopyFilesRecursively(new DirectoryInfo(docsPathFull), new DirectoryInfo(externalLuaPathFullRelease + "\\docs\\"), "", "");
+                    }
+                }
             }
 
             //tex get version from readme, superhax i know
             string modVersion = modVersionDefault;
-            string readmePathFull = docsDestinationPath + readMeName;
+            
             if (File.Exists(readmePathFull)) {
                 string[] readmeLines = File.ReadAllLines(readmePathFull);
                 // ASSUMPTION: version on 2nd line, 1st chars
@@ -156,9 +195,11 @@ namespace mgsv_buildmod {
 
             Console.WriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
-            TraverseTree(luaPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            //tex TODO restrict to Data1Lua,FpkCombineLua
+            TraverseTree(luaPath+@"\Data1Lua", ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            TraverseTree(luaPath + @"\FpkdCombinedLua", ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             //tex allow text files as subsituted
-            TraverseTree(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            //TraverseTree(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
             if (modFilesInfo.Count == 0) {
                 Console.WriteLine("no mod files found");
                 return;
@@ -211,7 +252,11 @@ namespace mgsv_buildmod {
                     }
                     Console.WriteLine(buildFileInfo.filePath);
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(luaFileDestination));
+                    //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
+                    //having DOBUILD (example in externallua or mockfox)
+                    //I should just restrict buildfileinfo to data1,
+                    string dir = Path.GetDirectoryName(luaFileDestination);
+                    Directory.CreateDirectory(dir);
                     File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
                 }
             }
@@ -251,7 +296,7 @@ namespace mgsv_buildmod {
                         continue;
                     }
                     string totalPath = processFolderPath + lngPackPathTotal;
-                    if (!Directory.Exists(processFolderPath)) {
+                    if (!Directory.Exists(totalPath)) {
                         continue;
                     }
 
@@ -319,7 +364,8 @@ namespace mgsv_buildmod {
 
             if (copyExternalLua && release) {
                 Console.WriteLine();
-                Console.WriteLine("copying ExternalLua folder");
+
+                Console.WriteLine("copying ExternalLuaRelease folder to build");
 
                 if (Directory.Exists(externalLuaPathFullRelease)) {
                     string destPath = makebiteBuildPath + @"\GameDir\mod\";
@@ -355,14 +401,14 @@ namespace mgsv_buildmod {
                 xmlFile.Save(snakeBiteMetaDataFilePath);
             }
 
-            Console.WriteLine("Copying mod metadata");
-            if (File.Exists(snakeBiteMetaDataFilePath)) {
-                File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
-            }
-
             Console.WriteLine("Copying mod readme");
             if (File.Exists(snakeBiteReadMeFilePath)) {
                 File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
+            }
+
+            Console.WriteLine("Copying mod metadata");
+            if (File.Exists(snakeBiteMetaDataFilePath)) {
+                File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
             }
 
             if (release == false) {
@@ -415,7 +461,7 @@ namespace mgsv_buildmod {
                     string snakeBiteMgsvPath = "\"" + snakeBiteMgvsFilePath + "\"";
                     string snakeBiteArgs = "";
                     snakeBiteArgs += " -i";//install
-                    snakeBiteArgs += " -c";//no conflict check
+                    //snakeBiteArgs += " -c";//no conflict check
                     snakeBiteArgs += " -d";//reset hash
                     snakeBiteArgs += " -s";//skip cleanup
                     snakeBiteArgs += " -x";//exit
@@ -661,8 +707,22 @@ namespace mgsv_buildmod {
             }
         }
 
+        static string[] fox2Types = {
+            ".fox2",
+            ".sdf",
+            ".parts",
+            ".tgt",
+        };
+
         public static void RunFoxToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
-            if (!fileInfo.Name.Contains(".fox2.xml") && !fileInfo.Name.Contains(".sdf.xml") && !fileInfo.Name.Contains(".parts.xml")) {
+            bool isFox2Type = false;
+            foreach (string fox2Type in fox2Types) {
+                if (fileInfo.Name.Contains(fox2Type+".xml")) {
+                    isFox2Type = true;
+                    break;
+                }
+            }
+            if (!isFox2Type) {
                 return;
             }
 
