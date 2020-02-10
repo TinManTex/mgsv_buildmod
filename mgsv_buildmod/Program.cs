@@ -15,9 +15,10 @@ using System.Threading;
 namespace mgsv_buildmod {
     class Program {
         static string projectPath = ConfigurationManager.AppSettings.Get("projectPath");
-        static string projectDataFilesSubpath = @"\Data";// in respect to project path
+        static string projectDataFilesSubpath = @"\Data";//tex in respect to project path
         static string projectPackFilesSubPath = @"\fpkcombined";
-        static string projectCustomPackFilesSubPath = @"\customfpk";
+        static string projectCustomPackFilesSubPath = @"\modfpk";//@"\customfpk";
+
 
         static string projectDataFilesPathFull = projectPath + projectDataFilesSubpath;
         static string projectPackFilesPathFull = projectPath + projectPackFilesSubPath;
@@ -37,8 +38,11 @@ namespace mgsv_buildmod {
         //static string makeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite_0.61\makebite.exe";
         //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite_0.61\snakebite.exe";
 
-        static string makeBitePath = @"D:\Games\[Utils]\[MGSV]\SnakeBite\makebite.exe";
+        //static string makeBitePath = @"D:\Games\[Utils]\[MGSV]\SnakeBite\makebite.exe";
         static string snakeBitePath = @"D:\Games\[Utils]\[MGSV]\SnakeBite\snakebite.exe";
+
+        static string makeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite-master\makebite\bin\Debug\makebite.exe";
+        //static string snakeBitePath = @"D:\Games\[Utils]\[MGSV]\SnakeBite\snakebite.exe";
 
         //static string makeBitePath = @"D:\Projects\MGS\snakebite\SB0511\makebite.exe";
         //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SB0511\snakebite.exe";
@@ -47,7 +51,7 @@ namespace mgsv_buildmod {
         //static string makeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite-0.8src\makebite\bin\Debug\makebite.exe";
         //static string snakeBitePath = @"D:\Projects\MGS\snakebite\SnakeBite-0.8src\SnakeBite\bin\Debug\snakebite.exe";
 
-        
+
 
         static string langFilePath = @"D:\Projects\MGS\InfiniteHeavenLDT\InfiniteHeaven\src\Data\Assets\tpp\script\lib\InfLang.lua";
 
@@ -95,11 +99,12 @@ namespace mgsv_buildmod {
             //bool wantCleanFpks = false;
 
             bool buildLng2s = false;
+
             bool buildFox2s = true;
             bool copyCustomFpks = true;
-            bool buildCustomFpkss = true;
+            bool buildCustomFpkss = false;
 
-            bool customfpkfix = true;
+            bool customfpkfix = false;//tex till the file order issue for fpkd+fox2 can be figured out.
 
             if (args.Length != 0) {
                 foreach (string arg in args) {
@@ -114,7 +119,7 @@ namespace mgsv_buildmod {
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
 
-            // get version from readme, superhax i know
+            //tex get version from readme, superhax i know
             string modVersion = modVersionDefault;
             string readmePathFull = buildFolder + "\\" + readMeName;
             if (File.Exists(readmePathFull)) {
@@ -270,7 +275,9 @@ namespace mgsv_buildmod {
             if (copyCustomFpks) {
                 Console.WriteLine();
                 Console.WriteLine("copying custom pack folder");
-                CopyFilesRecursively(new DirectoryInfo(projectCustomPackFilesPathFull), new DirectoryInfo(modBuildPath), "", ".xml");
+                if (Directory.Exists(projectCustomPackFilesPathFull)) {
+                    CopyFilesRecursively(new DirectoryInfo(projectCustomPackFilesPathFull), new DirectoryInfo(modBuildPath), "", ".xml");
+                }
             }
 
 
@@ -352,12 +359,14 @@ namespace mgsv_buildmod {
 
                 Console.WriteLine("copying custom pack fpkds");
                 CopyFilesRecursively(new DirectoryInfo(projectCustomPackFilesPathFull), new DirectoryInfo(extractPath), ".fpkd","");
+                DeleteEmptyDirs(extractPath);
+
 
                 Console.WriteLine("deleting .mgsv");
                 if (File.Exists(snakeBiteMgvsFilePath)) {
                     File.Delete(snakeBiteMgvsFilePath);
                 }
-                //TODO: REPACK
+
                 toolArgs = " a -tzip " + snakeBiteMgvsFilePath + " " +  extractPath  +"\\*.* -r";
 
                 UseTool(@".\7za.exe", toolArgs);
@@ -512,10 +521,9 @@ namespace mgsv_buildmod {
 
         public static void ReadLuaBuildInfoProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
 
-            /* --tex REF:
+            /* REF:
             -- DOBUILD: 1
             -- ORIGINALQAR: chunk0
-            -- FILEPATH: \Assets\tpp\level\mission2\init\init_sequence.lua
             -- PACKPATH: \Assets\tpp\pack\mission2\init\init.fpkd
             */
             // ASSUMPTION! no spaces in attrib1
@@ -586,7 +594,7 @@ namespace mgsv_buildmod {
 
                 if (fileInfo.Extension == ".lua") {
                     buildFileInfo.fullPath = fileInfo.FullName;
-                    // find path relative to projectpath?
+                    // tex find path relative to projectpath?
                     // find 'data' 'pack' - set type
                     // what about orginail archive? useful to more quickly find the inf/tool xml
                     // figure out filepath /root (ie \archive\tpp\blah
@@ -626,7 +634,7 @@ namespace mgsv_buildmod {
         }
 
         public static void RunFoxToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
-            if (!fileInfo.Name.Contains(".fox2.xml")) {
+            if (!fileInfo.Name.Contains(".fox2.xml") && !fileInfo.Name.Contains(".sdf.xml")) {
                 return;
             }
 
@@ -641,10 +649,9 @@ namespace mgsv_buildmod {
             UseTool(gzsToolPath, fileInfo.FullName);
         }
 
+        /* CULL
         private static string UsePackTool(string packPath, bool pack) {
-            // Start the child process.
             Process p = new Process();
-            // Redirect the output stream of the child process.
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.FileName = gzsToolPath;
@@ -653,15 +660,12 @@ namespace mgsv_buildmod {
                 p.StartInfo.Arguments += ".xml";
             }
             p.Start();
-            // Do not wait for the child process to exit before
-            // reading to the end of its redirected stream.
-            // p.WaitForExit();
-            // Read the output stream first and then wait.
+
             string output = p.StandardOutput.ReadToEnd();
             p.WaitForExit();
             var exitCode = p.ExitCode;
             return output;
-        }
+        }*/
 
 
         private static void UseTool(string toolPath, string args) {
@@ -674,7 +678,7 @@ namespace mgsv_buildmod {
             p.StartInfo.FileName = toolPath;
             p.StartInfo.Arguments = args;
             p.Start();
-            //string output = p.StandardOutput.ReadToEnd();
+            //string output = p.StandardOutput.ReadToEnd(); //tex (m/sn)akebite doesn't have output. TODO: or does it, I know Topher added logging at some point
             p.WaitForExit();
             var exitCode = p.ExitCode;
             // return output;
@@ -691,6 +695,28 @@ namespace mgsv_buildmod {
                     }
                 }
             }
+        }
+
+
+        static void DeleteEmptyDirs(string dir) {
+            if (String.IsNullOrEmpty(dir))
+                throw new ArgumentException(
+                    "Starting directory is a null reference or an empty string",
+                    "dir");
+
+            try {
+                foreach (var d in Directory.EnumerateDirectories(dir)) {
+                    DeleteEmptyDirs(d);
+                }
+
+                var entries = Directory.EnumerateFileSystemEntries(dir);
+
+                if (!entries.Any()) {
+                    try {
+                        Directory.Delete(dir);
+                    } catch (UnauthorizedAccessException) { } catch (DirectoryNotFoundException) { }
+                }
+            } catch (UnauthorizedAccessException) { }
         }
     }
 }
