@@ -53,6 +53,7 @@ namespace mgsv_buildmod {
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
             public string ihHookPath = @"D:\GitHub\IHHook\x64\Debug\IHHook.dll";
             public string ihHookProxyName = "dinput8.dll";
+            public bool copyProxyDll = false;
 
 
             // TODO: just point to sperate file
@@ -161,7 +162,7 @@ namespace mgsv_buildmod {
                     File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
                 }
 
-                if (File.Exists(bs.ihHookPath)) {
+                if (File.Exists(bs.ihHookPath) && bs.copyProxyDll) {
                     Console.WriteLine("copying IHHook");
                     string destPath = bs.makebiteBuildPath + @"\GameDir\";
                     if (!Directory.Exists(destPath)) {
