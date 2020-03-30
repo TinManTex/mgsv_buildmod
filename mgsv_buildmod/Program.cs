@@ -457,7 +457,7 @@ namespace mgsv_buildmod {
                     snakeBiteArgs += " -i";//install
                     //snakeBiteArgs += " -c";//no conflict check
                     snakeBiteArgs += " -d";//reset hash
-                    snakeBiteArgs += " -s";//skip cleanup
+                    //snakeBiteArgs += " -s";//skip cleanup
                     snakeBiteArgs += " -x";//exit
                     UseTool(snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
                 }
