@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 namespace mgsv_buildmod {
     class Program {
         class BuildModSettings {
-            public string projectPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp";
+            public string projectPath = @"D:\Projects\MGS\InfiniteHeaven\tpp";
             public string externalInstallSubPath = "mod";
 
             public string luaDataFilesSubpath = @"\dat1_dat-lua";
@@ -27,17 +27,17 @@ namespace mgsv_buildmod {
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
             public List<string> modPackPaths = new List<string> {
-                // @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk",
-                // @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk-test",
+                // @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk",
+                // @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk-test",
             };
-            //public string projectPackFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk";
-            //public string projectPackFilesPath_test = @"D:\Projects\MGS\!InfiniteHeaven\tpp\modfpk-test";
+            //public string projectPackFilesPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk";
+            //public string projectPackFilesPath_test = @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk-test";
 
             public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";
 
-            public string docsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\external\docs";
+            public string docsPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
-            public string externalLuaPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\external";
+            public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";
 
             public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
 
@@ -358,6 +358,18 @@ namespace mgsv_buildmod {
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
+            }
+
+            if (bs.release) {
+                //tex in case I forget to update docs in gamedir-release
+                string docsDestinationPath = bs.makebiteBuildPath + @"\GameDir\mod\docs";
+                if (Directory.Exists(docsDestinationPath)) {
+                    DeleteAndWait(docsDestinationPath);
+                }
+                if (!Directory.Exists(docsDestinationPath)) {
+                    Directory.CreateDirectory(docsDestinationPath);
+                }
+                CopyFilesRecursively(new DirectoryInfo(bs.docsPath), new DirectoryInfo(docsDestinationPath), "", "");
             }
 
 
