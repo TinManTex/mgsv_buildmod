@@ -37,6 +37,7 @@ namespace mgsv_buildmod {
 
             public string docsPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
+            public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex a bit confusing, but actually mod/Assets
             public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";
 
             public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
@@ -67,6 +68,7 @@ namespace mgsv_buildmod {
             public bool buildSubps = false;
             public bool buildFox2s = true;
             public bool copyModPackFolders = true;
+            public bool copyInternalLua = false;//tex copies external to internal (ih will still try to load external by default, so do not include in gamedir-mod\release)
             public bool copyExternalLua = false;//tex copies external to makeBite/GameDir (WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release).
 
             public bool makeMod = true;
@@ -345,6 +347,19 @@ namespace mgsv_buildmod {
                     if (Directory.Exists(path)) {
                         CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", ".xml");
                     }
+                }
+            }
+
+            if (bs.copyInternalLua) {
+                Console.WriteLine();
+
+                Console.WriteLine("copying external folder to internal");
+
+                string internalLuaPath = bs.internalLuaPath + @"\Assets";
+                if (Directory.Exists(internalLuaPath)) {
+                    string destPath = bs.makebiteBuildPath + @"\Assets";
+                    Directory.CreateDirectory(destPath);
+                    CopyFilesRecursively(new DirectoryInfo(internalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
 
