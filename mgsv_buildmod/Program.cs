@@ -16,7 +16,6 @@ namespace mgsv_buildmod {
     class Program {
         class BuildModSettings {
             public string projectPath = @"D:\Projects\MGS\InfiniteHeaven\tpp";
-            public string externalInstallSubPath = "mod";
 
             public string luaDataFilesSubpath = @"\dat1_dat-lua";
             public string luaPackFilesSubPath = @"\fpkd-combined-lua";
@@ -37,7 +36,7 @@ namespace mgsv_buildmod {
 
             public string docsPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
-            public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex a bit confusing, but actually mod/Assets
+            public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";
             public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";
 
             public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
@@ -157,7 +156,7 @@ namespace mgsv_buildmod {
             if (bs.release) {
                 if (File.Exists(bs.ihExtPath)) {
                     Console.WriteLine("copying IHExt");
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\" + bs.externalInstallSubPath + @"\";
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
                     if (!Directory.Exists(destPath)) {
                         Directory.CreateDirectory(destPath);
                     }
@@ -355,11 +354,10 @@ namespace mgsv_buildmod {
 
                 Console.WriteLine("copying external folder to internal");
 
-                string internalLuaPath = bs.internalLuaPath + @"\Assets";
-                if (Directory.Exists(internalLuaPath)) {
+                if (Directory.Exists(bs.internalLuaPath)) {
                     string destPath = bs.makebiteBuildPath + @"\Assets";
                     Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(internalLuaPath), new DirectoryInfo(destPath), "", "");
+                    CopyFilesRecursively(new DirectoryInfo(bs.internalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
 
@@ -369,7 +367,7 @@ namespace mgsv_buildmod {
                 Console.WriteLine("copying external folder to build");
 
                 if (Directory.Exists(bs.externalLuaPath)) {
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\" + bs.externalInstallSubPath + @"\";
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
