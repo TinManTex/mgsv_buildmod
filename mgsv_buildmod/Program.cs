@@ -38,6 +38,7 @@ namespace mgsv_buildmod {
 
             public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";
             public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";
+            public string modulesLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";
 
             public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
 
@@ -67,8 +68,9 @@ namespace mgsv_buildmod {
             public bool buildSubps = false;
             public bool buildFox2s = true;
             public bool copyModPackFolders = true;
-            public bool copyInternalLua = false;//tex copies external to internal (ih will still try to load external by default, so do not include in gamedir-mod\release)
+            public bool copyInternalLua = false;//tex copies core external lua to internal (ih will still try to load external by default, so do not include in gamedir-mod\release)
             public bool copyExternalLua = false;//tex copies external to makeBite/GameDir (WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release).
+            public bool copyModulesToInternal = false;//copies external lua modules to internal
 
             public bool makeMod = true;
             public bool installMod = true;
@@ -352,12 +354,28 @@ namespace mgsv_buildmod {
             if (bs.copyInternalLua) {
                 Console.WriteLine();
 
-                Console.WriteLine("copying external folder to internal");
+                Console.WriteLine("copying core external folder to internal");
 
                 if (Directory.Exists(bs.internalLuaPath)) {
                     string destPath = bs.makebiteBuildPath + @"\Assets";
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.internalLuaPath), new DirectoryInfo(destPath), "", "");
+                }
+
+
+            }
+
+            if (bs.copyModulesToInternal)
+            {
+                Console.WriteLine();
+
+                Console.WriteLine("copying external modules folder to internal");
+
+                if (Directory.Exists(bs.modulesLuaPath))
+                {
+                    string destPath = bs.makebiteBuildPath + @"\Assets\tpp\script\ih";//DEBUGNOW dont like this
+                    Directory.CreateDirectory(destPath);
+                    CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
 
