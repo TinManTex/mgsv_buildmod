@@ -361,8 +361,18 @@ namespace mgsv_buildmod {
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.internalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
+            }
 
+            if (bs.copyExternalLua) {
+                Console.WriteLine();
 
+                Console.WriteLine("copying external folder to build");
+
+                if (Directory.Exists(bs.externalLuaPath)) {
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
+                    Directory.CreateDirectory(destPath);
+                    CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
+                }
             }
 
             if (bs.copyModulesToInternal)
@@ -376,18 +386,14 @@ namespace mgsv_buildmod {
                     string destPath = bs.makebiteBuildPath + @"\Assets\tpp\script\ih";//DEBUGNOW dont like this
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
-                }
-            }
-
-            if (bs.copyExternalLua) {
-                Console.WriteLine();
-
-                Console.WriteLine("copying external folder to build");
-
-                if (Directory.Exists(bs.externalLuaPath)) {
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
-                    Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
+                    //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
+                    string modulesPath = bs.makebiteBuildPath + @"\GameDir\mod\modules";
+                    if (Directory.Exists(modulesPath))
+                    {
+                        DeleteAndWait(modulesPath);
+                        Directory.CreateDirectory(modulesPath);
+                        File.CreateText(modulesPath+"/ih_files.txt").Close();
+                    }
                 }
             }
 
