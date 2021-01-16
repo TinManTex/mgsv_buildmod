@@ -104,6 +104,8 @@ namespace mgsv_buildmod {
         public delegate void ProcessFileDelegate(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
 
         static void Main(string[] args) {
+            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");
+
             if (args.Length == 0) {//tex write default config 
                 Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
 
