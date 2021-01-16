@@ -351,18 +351,6 @@ namespace mgsv_buildmod {
                 }
             }
 
-            if (bs.copyInternalLua) {
-                Console.WriteLine();
-
-                Console.WriteLine("copying core external folder to internal");
-
-                if (Directory.Exists(bs.internalLuaPath)) {
-                    string destPath = bs.makebiteBuildPath + @"\Assets";
-                    Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(bs.internalLuaPath), new DirectoryInfo(destPath), "", "");
-                }
-            }
-
             if (bs.copyExternalLua) {
                 Console.WriteLine();
 
@@ -372,6 +360,26 @@ namespace mgsv_buildmod {
                     string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
+                }
+            }
+
+            if (bs.copyInternalLua)
+            {
+                Console.WriteLine();
+
+                Console.WriteLine("copying core external folder to internal");
+
+                if (Directory.Exists(bs.internalLuaPath))
+                {
+                    string destPath = bs.makebiteBuildPath + @"\Assets";
+                    Directory.CreateDirectory(destPath);
+                    CopyFilesRecursively(new DirectoryInfo(bs.internalLuaPath), new DirectoryInfo(destPath), "", "");      
+                    //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
+                    string buildExternalAssetsPath = bs.makebiteBuildPath + @"\GameDir\mod\Assets\";
+                    if (Directory.Exists(buildExternalAssetsPath))
+                    {
+                        DeleteAndWait(buildExternalAssetsPath);
+                    }
                 }
             }
 
