@@ -17,10 +17,10 @@ namespace mgsv_buildmod {
         class BuildModSettings {
             public string projectPath = @"D:\Projects\MGS\InfiniteHeaven\tpp";
 
-            public string luaDataFilesSubpath = @"\dat1_dat-lua";
+            //public string luaDataFilesSubpath = @"\dat1_dat-lua";//DEBUGNOW CULL and all references
             public string luaPackFilesSubPath = @"\fpkd-combined-lua";
 
-            public string luaDataFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\data1_dat-lua";
+            //public string luaDataFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\data1_dat-lua";//DEBUGNOW CULL and all references
             public string luaPackFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\fpkd-combined-lua";
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
@@ -191,7 +191,7 @@ namespace mgsv_buildmod {
             Console.WriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
-            TraverseTree(bs.luaDataFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            //DEBUGNOW CULL TraverseTree(bs.luaDataFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             TraverseTree(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             //tex allow text files as subsituted
             //TraverseTree(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
@@ -234,13 +234,14 @@ namespace mgsv_buildmod {
                         string internalPath = buildFileInfo.fullPath.Substring(bs.luaPackFilesPath.Length);
                         luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
                     }
-                    else {
-                        //DEBUGNOW KLUDGE
-                        var sourcePath = bs.luaDataFilesPath;
-                        var targetPath = bs.makebiteBuildPath;
+                    //DEBUGNOW
+                    //else {
+                    //    //DEBUGNOW KLUDGE
+                    //    var sourcePath = bs.luaDataFilesPath;
+                    //    var targetPath = bs.makebiteBuildPath;
 
-                        luaFileDestination = buildFileInfo.fullPath.Replace(sourcePath, targetPath);
-                    }
+                    //    luaFileDestination = buildFileInfo.fullPath.Replace(sourcePath, targetPath);
+                    //}
                     Console.WriteLine(luaFileDestination);
 
                     //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
