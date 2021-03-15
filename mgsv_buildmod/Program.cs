@@ -54,6 +54,7 @@ namespace mgsv_buildmod {
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
             public string ihHookPath = @"D:\GitHub\IHHook\x64\Debug\IHHook.dll";
             public string ihHookProxyName = "dinput8.dll";
+            public bool copyIHExt = false;
             public bool copyProxyDll = false;
 
 
@@ -67,6 +68,7 @@ namespace mgsv_buildmod {
             public bool buildLng2s = true;
             public bool buildSubps = false;
             public bool buildFox2s = true;
+            public bool buildLbas = true;
             public bool copyModPackFolders = true;
             public bool copyInternalLua = false;//tex copies core external lua to internal (ih will still try to load external by default, so do not include in gamedir-mod\release)
             public bool copyExternalLua = false;//tex copies external to makeBite/GameDir (WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release).
@@ -86,6 +88,7 @@ namespace mgsv_buildmod {
         static string langToolPath = ConfigurationManager.AppSettings.Get("langToolPath");
         static string foxToolPath = ConfigurationManager.AppSettings.Get("foxToolPath");
         static string subpToolPath = ConfigurationManager.AppSettings.Get("subpToolPath");
+        static string lbaToolPath = ConfigurationManager.AppSettings.Get("lbaToolPath");
         static string makeBitePath = ConfigurationManager.AppSettings.Get("makeBitePath");
         static string snakeBitePath = ConfigurationManager.AppSettings.Get("snakeBitePath");
 
@@ -158,7 +161,7 @@ namespace mgsv_buildmod {
             }
 
             if (bs.release) {
-                if (File.Exists(bs.ihExtPath)) {
+                if (File.Exists(bs.ihExtPath) && bs.copyIHExt) {
                     Console.WriteLine("copying IHExt");
                     string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
                     if (!Directory.Exists(destPath)) {
@@ -343,6 +346,17 @@ namespace mgsv_buildmod {
                 }
             }
 
+            if (bs.buildLbas) {
+                Console.WriteLine("building lbas");
+                foreach (string path in bs.modPackPaths)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        TraverseTree(path, ".xml", RunLbaToolProcess, ref modFilesInfo);
+                    }
+                }
+            }
+
             if (bs.copyModPackFolders) {
                 Console.WriteLine();
                 Console.WriteLine("copying modPackPaths folders");
@@ -422,6 +436,10 @@ namespace mgsv_buildmod {
 
             string snakeBiteMgvsDestFilePath = bs.buildFolder + "\\" + bs.modFileName + ".mgsv";
             string snakeBiteMgvsFilePath = bs.makebiteBuildPath + "\\" + "mod.mgsv";
+            //tex for if I change makebite from building inputfoldername\\mod.mgsv to build inputpathparent\inputfoldername.mgsv
+            //string snakeBiteMgvsDestFilePath = $"{bs.buildFolder}\\{bs.modFileName}.mgsv";
+            //string snakeBiteMgvsFilePath = $"{Directory.GetParent(bs.makebiteBuildPath)}\\makebite.mgsv";
+
             snakeBiteMgvsFilePath = UnfungePath(snakeBiteMgvsFilePath);
             string snakeBiteMetaDataFilePath = bs.buildFolder + "\\" + "metadata.xml";
             string snakeBiteMetaDataDestFilePath = bs.makebiteBuildPath + "\\" + "metadata.xml";
@@ -758,6 +776,16 @@ namespace mgsv_buildmod {
             }
 
             UseTool(subpToolPath, fileInfo.FullName);
+        }
+
+        public static void RunLbaToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList)
+        {
+            if (!fileInfo.Name.Contains(".lba.xml"))
+            {
+                return;
+            }
+
+            UseTool(lbaToolPath, fileInfo.FullName);
         }
 
         public static void RunGzToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
