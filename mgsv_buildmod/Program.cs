@@ -82,7 +82,7 @@ namespace mgsv_buildmod {
 
 
             public bool waitEnd = true;
-        }
+        }//BuildModSettings
 
         class ToolPathSettings
         {
@@ -93,7 +93,7 @@ namespace mgsv_buildmod {
             public static string lbaToolPath = @"D:\GitHub\LbaTool\LbaTool\bin\Debug\LbaTool.exe";
             public static string makeBitePath = @"D:\GitHub\SnakeBite\makebite\bin\Debug\makebite.exe";
             public static string snakeBitePath = @"D:\GitHub\SnakeBite\snakebite\bin\Debug\snakebite.exe";
-        }
+        }//ToolPathSettings
 
         public class BuildFileInfo {
             public string fullPath = "";
@@ -548,7 +548,7 @@ namespace mgsv_buildmod {
             if (bs.waitEnd) {
                 Console.ReadKey();
             }
-        }
+        }//Main
         //tex get version from readme, superhax i know
         private static string GetModVersion(string modVersion, string readmePathFull) {
             if (File.Exists(readmePathFull)) {
@@ -634,7 +634,7 @@ namespace mgsv_buildmod {
                 foreach (string str in subDirs)
                     dirs.Push(str);
             }
-        }
+        }//TraverseTree
 
         public static void ReadLuaBuildInfoProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
 
@@ -736,7 +736,7 @@ namespace mgsv_buildmod {
                 }
                 */
             }
-        }
+        }//ReadLuaBuildInfoProcess
 
         public static void RunLangToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
             if (!fileInfo.Name.Contains(".lng2.xml")) {
@@ -900,6 +900,6 @@ namespace mgsv_buildmod {
                 }
             }
             catch (UnauthorizedAccessException) { }
-        }
-    }
-}
+        }//DeleteEmptyDirs
+    }//class Program
+}//namespace mgsv_buildmod
