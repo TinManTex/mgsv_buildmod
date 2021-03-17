@@ -116,7 +116,7 @@ namespace mgsv_buildmod {
                 Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
 
                 var config = new BuildModSettings();
-                string jsonOutPath = @"c:\Projects\MGS\Tools\BuildMod\mgsv_buildmod\config-example.json";
+                string jsonOutPath = @".\build-config-example.json";
                 Console.WriteLine($"Writing default config to {jsonOutPath}");
                 JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
                 serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
@@ -124,8 +124,17 @@ namespace mgsv_buildmod {
 
                 File.WriteAllText(jsonOutPath, jsonStringOut);
 
+                var toolSettings = new ToolPathSettings();
+                jsonOutPath = @".\tools-config-example.json";
+                Console.WriteLine($"Writing default tools config to {jsonOutPath}");
+                serializeSettings = new JsonSerializerSettings();
+                serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
+
+                File.WriteAllText(jsonOutPath, jsonStringOut);
+
                 return;
-            }
+            }//args 0
 
             string configPath = GetPath(args[0]);
             if (configPath == null) {
