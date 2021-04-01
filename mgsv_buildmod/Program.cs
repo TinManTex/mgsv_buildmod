@@ -108,8 +108,10 @@ namespace mgsv_buildmod {
         }
 
         public delegate void ProcessFileDelegate(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
-
+        static string titlePrefix = "mgsv_buildmod - ";
         static void Main(string[] args) {
+
+            Console.Title = titlePrefix;
             var cc = new ConsoleCopy("mgsv_buildmod_log.txt");
 
             if (args.Length == 0) {//tex write default config 
@@ -136,6 +138,7 @@ namespace mgsv_buildmod {
                 return;
             }//args 0
 
+            ConsoleTitleAndWriteLine("Read Config");
             string configPath = GetPath(args[0]);
             if (configPath == null) {
                 Console.Write("ERROR: could not find config path");
@@ -156,11 +159,13 @@ namespace mgsv_buildmod {
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
-
-            Console.WriteLine("deleting existing makebite build folder");
+            ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
 
+
+            ConsoleTitleAndWriteLine("Copy docs and exes");
             if (Directory.Exists(bs.docsPath)) {
+                Console.Title = titlePrefix + "Copy docs";
                 Console.WriteLine("copying docs files to build folder");
                 string docsDestinationPath = bs.buildFolder + @"\docs";
                 if (Directory.Exists(docsDestinationPath)) {
@@ -200,7 +205,7 @@ namespace mgsv_buildmod {
             modVersion = GetModVersion(modVersion, readmePathFull);
             Console.WriteLine("got modVersion:{0}", modVersion);
 
-            Console.WriteLine("generating buildInfo");
+            ConsoleTitleAndWriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
             //DEBUGNOW CULL TraverseTree(bs.luaDataFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
@@ -237,7 +242,8 @@ namespace mgsv_buildmod {
             */
 
             Console.WriteLine();
-            Console.WriteLine("copying mod files to build folder");
+
+            ConsoleTitleAndWriteLine("copying mod files to build folder");
             foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
                 if (buildFileInfo.doBuild) {
                     string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
@@ -268,7 +274,7 @@ namespace mgsv_buildmod {
             }
 
             if (bs.buildLng2s) {
-                Console.WriteLine("building lng2s");
+                ConsoleTitleAndWriteLine("building lng2s");
                 //tex copy over lang files to other lang coded
                 List<string> langCodes = new List<string> {
                     //"eng",
@@ -341,7 +347,7 @@ namespace mgsv_buildmod {
             }
 
             if (bs.buildFox2s) {
-                Console.WriteLine("building fox2s");
+                ConsoleTitleAndWriteLine("building fox2s");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         TraverseTree(path, ".xml", RunFoxToolProcess, ref modFilesInfo);
@@ -351,7 +357,7 @@ namespace mgsv_buildmod {
 
             bs.buildSubps = false;//DEBUGNOW 
             if (bs.buildSubps) {
-                Console.WriteLine("building subps");
+                ConsoleTitleAndWriteLine("building subps");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         TraverseTree(path, ".xml", RunSubpToolProcess, ref modFilesInfo);
@@ -360,7 +366,7 @@ namespace mgsv_buildmod {
             }
 
             if (bs.buildLbas) {
-                Console.WriteLine("building lbas");
+                ConsoleTitleAndWriteLine("building lbas");
                 foreach (string path in bs.modPackPaths)
                 {
                     if (Directory.Exists(path))
@@ -372,7 +378,7 @@ namespace mgsv_buildmod {
 
             if (bs.copyModPackFolders) {
                 Console.WriteLine();
-                Console.WriteLine("copying modPackPaths folders");
+                ConsoleTitleAndWriteLine("copying modPackPaths folders");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", ".xml");
@@ -383,7 +389,7 @@ namespace mgsv_buildmod {
             if (bs.copyExternalLua) {
                 Console.WriteLine();
 
-                Console.WriteLine("copying external folder to build");
+                ConsoleTitleAndWriteLine("copying external folder to build");
 
                 if (Directory.Exists(bs.externalLuaPath)) {
                     string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
@@ -396,7 +402,7 @@ namespace mgsv_buildmod {
             {
                 Console.WriteLine();
 
-                Console.WriteLine("copying core external folder to internal");
+                ConsoleTitleAndWriteLine("copying core external folder to internal");
 
                 if (Directory.Exists(bs.internalLuaPath))
                 {
@@ -416,7 +422,7 @@ namespace mgsv_buildmod {
             {
                 Console.WriteLine();
 
-                Console.WriteLine("copying external modules folder to internal");
+                ConsoleTitleAndWriteLine("copying external modules folder to internal");
 
                 if (Directory.Exists(bs.modulesLuaPath))
                 {
@@ -435,6 +441,7 @@ namespace mgsv_buildmod {
             }
 
             if (bs.release) {
+                ConsoleTitleAndWriteLine("copy docs");//DEBUGNOW then what about copy docs above?
                 //tex in case I forget to update docs in gamedir-release
                 string docsDestinationPath = bs.makebiteBuildPath + @"\GameDir\mod\docs";
                 if (Directory.Exists(docsDestinationPath)) {
@@ -463,7 +470,7 @@ namespace mgsv_buildmod {
 
 
 
-            Console.WriteLine("Updating metadata version tag");
+            ConsoleTitleAndWriteLine("Updating metadata version tag");
             if (File.Exists(snakeBiteMetaDataFilePath)) {
                 XDocument xmlFile = XDocument.Load(snakeBiteMetaDataFilePath);
 
@@ -477,17 +484,18 @@ namespace mgsv_buildmod {
                 xmlFile.Save(snakeBiteMetaDataFilePath);
             }
 
-            Console.WriteLine("Copying mod readme");
+            ConsoleTitleAndWriteLine("Copying mod readme");
             if (File.Exists(snakeBiteReadMeFilePath)) {
                 File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
             }
 
-            Console.WriteLine("Copying mod metadata");
+            ConsoleTitleAndWriteLine("Copying mod metadata");
             if (File.Exists(snakeBiteMetaDataFilePath)) {
                 File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
             }
 
             if (bs.release == false && bs.cleanDat) {
+                ConsoleTitleAndWriteLine("cleandat");
                 Console.WriteLine("Deleting sbmods.xml");
                 string sbmodFilePath = bs.gamePath + "\\snakebite.xml";
                 string sbmodCleanFilePath = bs.gamePath + "\\snakebiteclean.xml";
@@ -515,7 +523,7 @@ namespace mgsv_buildmod {
 
 
             if (bs.makeMod) {
-                Console.WriteLine("makebite building " + snakeBiteMgvsFilePath);
+                ConsoleTitleAndWriteLine("makebite building " + snakeBiteMgvsFilePath);
                 string toolArgs = "";
                 toolArgs += bs.makebiteBuildPath;
                 UseTool(ToolPathSettings.makeBitePath, toolArgs);
@@ -536,12 +544,12 @@ namespace mgsv_buildmod {
 
             if (bs.release == false) {
                 if (bs.installOtherMods) {
-                    Console.WriteLine("running snakebite on othermods");
+                    ConsoleTitleAndWriteLine("running snakebite on othermods");
                     TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess, ref modFilesInfo);
                 }
 
                 if (bs.installMod) {
-                    Console.WriteLine("running snakebite on mod");
+                    ConsoleTitleAndWriteLine("running snakebite on mod");
                     string snakeBiteMgsvPath = "\"" + snakeBiteMgvsFilePath + "\"";
                     string snakeBiteArgs = "";
                     snakeBiteArgs += " -i";//install
@@ -553,11 +561,18 @@ namespace mgsv_buildmod {
                 }
             }
 
-            Console.WriteLine("done");
+            ConsoleTitleAndWriteLine("done");
             if (bs.waitEnd) {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void ConsoleTitleAndWriteLine(string logLine)
+        {
+            Console.Title = titlePrefix + logLine;
+            Console.WriteLine(logLine);
+        }//ConsoleTitleAndWriteLine
+
         //tex get version from readme, superhax i know
         private static string GetModVersion(string modVersion, string readmePathFull) {
             if (File.Exists(readmePathFull)) {
