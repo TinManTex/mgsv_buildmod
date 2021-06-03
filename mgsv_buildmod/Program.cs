@@ -159,6 +159,59 @@ namespace mgsv_buildmod {
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
+            //DEBUGNOW if (bs.release) {
+            //DEBUGNOW  if (File.Exists(bs.ihHookPath) && bs.copyProxyDll)
+            {
+                Console.WriteLine("making IHHook release");
+                string ihhookBuildFolder = @"C:\Projects\MGS\build\ihhook";
+                string ihhMakebiteBuildPath = $"{ihhookBuildFolder}\\makebite\\";
+                ConsoleTitleAndWriteLine("deleting existing makebite build folder");
+                DeleteAndWait(ihhMakebiteBuildPath);//tex GOTCHA will complain if open in explorer
+                //Directory.CreateDirectory(ihhMakebiteBuildPath);
+                string destPath = ihhMakebiteBuildPath + @"\GameDir\";
+                if (!Directory.Exists(destPath))
+                {
+                    Directory.CreateDirectory(destPath);
+                }
+                File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
+
+                //copy metadata
+                string ihhMetaDataFilePath = ihhookBuildFolder + "\\" + "metadata.xml";
+                string ihhMetaDataDestFilePath = ihhMakebiteBuildPath + "\\" + "metadata.xml";
+                ConsoleTitleAndWriteLine("Copying ihhook metadata");
+                if (File.Exists(ihhMetaDataFilePath))
+                {
+                    File.Copy(ihhMetaDataFilePath, ihhMetaDataDestFilePath, true);
+                }
+
+                //DEBUGNOW copy ihhook docs
+
+                if (bs.makeMod)
+                {
+                    
+                    string ihhookMakeBiteMgvsDestFilePath = ihhookBuildFolder + "\\" + "IHHook" + ".mgsv";
+                    string ihhookMakeBiteMgvsFilePath = ihhMakebiteBuildPath + "\\" + "mod.mgsv";
+
+                    ConsoleTitleAndWriteLine("makebite building " + ihhookMakeBiteMgvsFilePath);
+                    string toolArgs = "";
+                    toolArgs += ihhMakebiteBuildPath;
+                    UseTool(ToolPathSettings.makeBitePath, toolArgs);
+
+                    if (!File.Exists(ihhookMakeBiteMgvsFilePath))
+                    {
+                        Console.WriteLine("Error! Cannot find " + ihhookMakeBiteMgvsFilePath);
+                        Console.ReadKey();
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Copying built msgv");
+                        File.Copy(ihhookMakeBiteMgvsFilePath, ihhookMakeBiteMgvsDestFilePath, true);
+                    }
+                }
+            }//copyProxyDll
+            //}//bs.release
+
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
 
@@ -186,15 +239,15 @@ namespace mgsv_buildmod {
                     }
                     File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
                 }
-
-                if (File.Exists(bs.ihHookPath) && bs.copyProxyDll) {
-                    Console.WriteLine("copying IHHook");
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\";
-                    if (!Directory.Exists(destPath)) {
-                        Directory.CreateDirectory(destPath);
-                    }
-                    File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
-                }
+                //CULL
+                //if (File.Exists(bs.ihHookPath) && bs.copyProxyDll) {
+                //    Console.WriteLine("copying IHHook");
+                //    string destPath = bs.makebiteBuildPath + @"\GameDir\";
+                //    if (!Directory.Exists(destPath)) {
+                //        Directory.CreateDirectory(destPath);
+                //    }
+                //    File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
+                //}
             }
 
 
