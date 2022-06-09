@@ -99,27 +99,9 @@ namespace mgsv_buildmod {
             Console.Title = titlePrefix;
             var cc = new ConsoleCopy("mgsv_buildmod_log.txt");
 
-            if (args.Length == 0) {//tex write default config 
+            if (args.Length == 0) { 
                 Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
-
-                var config = new BuildModSettings();
-                string jsonOutPath = @".\build-config-example.json";
-                Console.WriteLine($"Writing default config to {jsonOutPath}");
-                JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
-                serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-                string jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
-
-                File.WriteAllText(jsonOutPath, jsonStringOut);
-
-                var toolSettings = new ToolPathSettings();
-                jsonOutPath = @".\tools-config-example.json";
-                Console.WriteLine($"Writing default tools config to {jsonOutPath}");
-                serializeSettings = new JsonSerializerSettings();
-                serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-                jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
-
-                File.WriteAllText(jsonOutPath, jsonStringOut);
-
+                WriteDefaultConfigJson();
                 return;
             }//args 0
 
@@ -467,6 +449,27 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void WriteDefaultConfigJson()
+        {
+            var config = new BuildModSettings();
+            string jsonOutPath = @".\build-config-example.json";
+            Console.WriteLine($"Writing default config to {jsonOutPath}");
+            JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
+            serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+            string jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
+
+            File.WriteAllText(jsonOutPath, jsonStringOut);
+
+            var toolSettings = new ToolPathSettings();
+            jsonOutPath = @".\tools-config-example.json";
+            Console.WriteLine($"Writing default tools config to {jsonOutPath}");
+            serializeSettings = new JsonSerializerSettings();
+            serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+            jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
+
+            File.WriteAllText(jsonOutPath, jsonStringOut);
+        }
 
         private static Dictionary<string, BuildFileInfo> BuildLng2s(BuildModSettings bs, Dictionary<string, BuildFileInfo> modFilesInfo)
         {
