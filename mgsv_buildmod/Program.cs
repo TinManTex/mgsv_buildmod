@@ -159,56 +159,7 @@ namespace mgsv_buildmod {
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
-            //DEBUGNOW if (bs.release) {
-            //DEBUGNOW  if (File.Exists(bs.ihHookPath) && bs.copyProxyDll)
-            {
-                Console.WriteLine("making IHHook release");
-                string ihhookBuildFolder = @"C:\Projects\MGS\build\ihhook";
-                string ihh_makebiteSourcePath = @"D:\GitHub\IHHook\makebite";
-                string ihhMakebiteBuildPath = $"{ihhookBuildFolder}\\makebite\\";
-
-                ConsoleTitleAndWriteLine("deleting existing makebite build folder");
-                DeleteAndWait(ihhMakebiteBuildPath);//tex GOTCHA will complain if open in explorer
-
-                Directory.CreateDirectory(ihhMakebiteBuildPath);
-
-                Console.WriteLine("copy IHHook makebite folder");
-                CopyFilesRecursively(new DirectoryInfo(ihh_makebiteSourcePath), new DirectoryInfo(ihhMakebiteBuildPath), "", "");
-
-                Console.WriteLine("copy IHHook dll");
-                string destPath = ihhMakebiteBuildPath + @"\GameDir\";
-                //File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
-
-                //tex copy readme so makebite builds it into metadata
-                string ihh_readmeSource = @"D:\GitHub\IHHook\makebite\GameDir\mod\docs\IHHook-Readme.txt";
-                string ihh_readmeDest = ihhMakebiteBuildPath + "\\Readme.txt";
-                File.Copy(ihh_readmeSource, ihh_readmeDest, true);
-
-                if (bs.makeMod)
-                {
-                    
-                    string ihhookMakeBiteMgvsDestFilePath = ihhookBuildFolder + "\\" + "IHHook" + ".mgsv";
-                    string ihhookMakeBiteMgvsFilePath = ihhMakebiteBuildPath + "\\" + "mod.mgsv";
-
-                    ConsoleTitleAndWriteLine("makebite building " + ihhookMakeBiteMgvsFilePath);
-                    string toolArgs = "";
-                    toolArgs += ihhMakebiteBuildPath;
-                    UseTool(ToolPathSettings.makeBitePath, toolArgs);
-
-                    if (!File.Exists(ihhookMakeBiteMgvsFilePath))
-                    {
-                        Console.WriteLine("Error! Cannot find " + ihhookMakeBiteMgvsFilePath);
-                        Console.ReadKey();
-                        return;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Copying built msgv");
-                        File.Copy(ihhookMakeBiteMgvsFilePath, ihhookMakeBiteMgvsDestFilePath, true);
-                    }
-                }
-            }//copyProxyDll
-            //}//bs.release
+            BuildIHHookRelease(bs.makeMod);
 
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
@@ -617,6 +568,55 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void BuildIHHookRelease(bool makeMod)
+        {
+            Console.WriteLine("making IHHook release");
+            string ihhookBuildFolder = @"C:\Projects\MGS\build\ihhook";
+            string ihh_makebiteSourcePath = @"D:\GitHub\IHHook\makebite";
+            string ihhMakebiteBuildPath = $"{ihhookBuildFolder}\\makebite\\";
+
+            ConsoleTitleAndWriteLine("deleting existing ihh makebite build folder");
+            DeleteAndWait(ihhMakebiteBuildPath);//tex GOTCHA will complain if open in explorer
+
+            Directory.CreateDirectory(ihhMakebiteBuildPath);
+
+            Console.WriteLine("copy IHHook makebite folder");
+            CopyFilesRecursively(new DirectoryInfo(ihh_makebiteSourcePath), new DirectoryInfo(ihhMakebiteBuildPath), "", "");
+
+            Console.WriteLine("copy IHHook dll");
+            string destPath = ihhMakebiteBuildPath + @"\GameDir\";
+            //File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
+
+            //tex copy readme so makebite builds it into metadata
+            string ihh_readmeSource = @"D:\GitHub\IHHook\makebite\GameDir\mod\docs\IHHook-Readme.txt";
+            string ihh_readmeDest = ihhMakebiteBuildPath + "\\Readme.txt";
+            File.Copy(ihh_readmeSource, ihh_readmeDest, true);
+
+            if (makeMod)
+            {
+
+                string ihhookMakeBiteMgvsDestFilePath = ihhookBuildFolder + "\\" + "IHHook" + ".mgsv";
+                string ihhookMakeBiteMgvsFilePath = ihhMakebiteBuildPath + "\\" + "mod.mgsv";
+
+                ConsoleTitleAndWriteLine("makebite building " + ihhookMakeBiteMgvsFilePath);
+                string toolArgs = "";
+                toolArgs += ihhMakebiteBuildPath;
+                UseTool(ToolPathSettings.makeBitePath, toolArgs);
+
+                if (!File.Exists(ihhookMakeBiteMgvsFilePath))
+                {
+                    Console.WriteLine("Error! Cannot find " + ihhookMakeBiteMgvsFilePath);
+                    Console.ReadKey();
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("Copying built msgv");
+                    File.Copy(ihhookMakeBiteMgvsFilePath, ihhookMakeBiteMgvsDestFilePath, true);
+                }
+            }
+        }//BuildIHHookRelease
 
         private static void ConsoleTitleAndWriteLine(string logLine)
         {
