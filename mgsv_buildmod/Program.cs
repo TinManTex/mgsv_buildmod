@@ -40,10 +40,7 @@ namespace mgsv_buildmod {
             public string gamePath = @"D:\Games\Steam\SteamApps\common\MGS_TPP";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
-            public string ihHookPath = @"D:\GitHub\IHHook\x64\Release\IHHook.dll";
-            public string ihHookProxyName = "dinput8.dll";
             public bool copyIHExt = false;
-            public bool copyProxyDll = false;
 
 
             // TODO: just point to sperate file
@@ -176,15 +173,6 @@ namespace mgsv_buildmod {
                     }
                     File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
                 }
-                //CULL
-                //if (File.Exists(bs.ihHookPath) && bs.copyProxyDll) {
-                //    Console.WriteLine("copying IHHook");
-                //    string destPath = bs.makebiteBuildPath + @"\GameDir\";
-                //    if (!Directory.Exists(destPath)) {
-                //        Directory.CreateDirectory(destPath);
-                //    }
-                //    File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
-                //}
             }
 
 
@@ -254,77 +242,9 @@ namespace mgsv_buildmod {
                 }
             }
 
-            if (bs.buildLng2s) {
-                ConsoleTitleAndWriteLine("building lng2s");
-                //tex copy over lang files to other lang coded
-                List<string> langCodes = new List<string> {
-                    //"eng",
-                    "fre",
-                    "ger",
-                    "ita",
-                    "jpn",
-                    "por",
-                    "rus",
-                    "spa"
-                };
-
-                //tex KLUDGE ugh
-                List<string> langFilesPre = new List<string> {
-                    "ih_general",
-                    "ih_quest",
-                };
-
-                string lngPackPath = @"\Assets\tpp\pack\ui\lang";
-                string lngInternalPath = @"\Assets\tpp\lang\ui\";
-
-                //TODO
-                // \Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui
-                //for .lng2.xml files in modPackPath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
-                //strip filename of .eng.lng2.xml?
-
-                string lngPackPathTotal = @"\Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui\";
-
-                foreach (string modPackPath in bs.modPackPaths) {
-                    if (!Directory.Exists(modPackPath)) {
-                        continue;
-                    }
-                    string totalPath = modPackPath + lngPackPathTotal;
-                    if (!Directory.Exists(totalPath)) {
-                        continue;
-                    }
-
-                    foreach (string langCode in langCodes) {
-                        string[] langFiles = Directory.GetFiles(totalPath);
-                        foreach (string langFile in langFiles) {
-                            string langFilePre = Path.GetFileName(langFile);
-                            if (Path.GetExtension(langFile) != ".xml") {
-                                continue;
-                            }
-                            string trimString = ".eng.lng2.xml";
-                            int trimPos = langFilePre.Length - trimString.Length;
-                            langFilePre = langFilePre.Remove(trimPos, trimString.Length);
-                            string langFileEng = modPackPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
-                            langFileEng = UnfungePath(langFileEng);
-
-
-                            string langFileDest = modPackPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
-                            langFileDest = UnfungePath(langFileDest);
-
-                            File.Copy(langFileEng, langFileDest, true);
-                        }
-
-                    }
-
-                }
-
-
-                foreach (string path in bs.modPackPaths) {
-                    if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunLangToolProcess, ref modFilesInfo);
-
-                        //TraverseTree(path, ".xml", DeleteLng2XmlProcess, ref modFilesInfo);
-                    }
-                }
+            if (bs.buildLng2s)
+            {
+                modFilesInfo = BuildLng2s(bs, modFilesInfo);
             }
 
             if (bs.buildFox2s) {
@@ -548,6 +468,90 @@ namespace mgsv_buildmod {
             }
         }//Main
 
+        private static Dictionary<string, BuildFileInfo> BuildLng2s(BuildModSettings bs, Dictionary<string, BuildFileInfo> modFilesInfo)
+        {
+            ConsoleTitleAndWriteLine("building lng2s");
+            //tex copy over lang files to other lang coded
+            List<string> langCodes = new List<string> {
+                    //"eng",
+                    "fre",
+                    "ger",
+                    "ita",
+                    "jpn",
+                    "por",
+                    "rus",
+                    "spa"
+                };
+
+            //tex KLUDGE ugh
+            List<string> langFilesPre = new List<string> {
+                    "ih_general",
+                    "ih_quest",
+                };
+
+            string lngPackPath = @"\Assets\tpp\pack\ui\lang";
+            string lngInternalPath = @"\Assets\tpp\lang\ui\";
+
+            //TODO
+            // \Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui
+            //for .lng2.xml files in modPackPath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
+            //strip filename of .eng.lng2.xml?
+
+            string lngPackPathTotal = @"\Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui\";
+
+            foreach (string modPackPath in bs.modPackPaths)
+            {
+                if (!Directory.Exists(modPackPath))
+                {
+                    continue;
+                }
+                string totalPath = modPackPath + lngPackPathTotal;
+                if (!Directory.Exists(totalPath))
+                {
+                    continue;
+                }
+
+                foreach (string langCode in langCodes)
+                {
+                    string[] langFiles = Directory.GetFiles(totalPath);
+                    foreach (string langFile in langFiles)
+                    {
+                        string langFilePre = Path.GetFileName(langFile);
+                        if (Path.GetExtension(langFile) != ".xml")
+                        {
+                            continue;
+                        }
+                        string trimString = ".eng.lng2.xml";
+                        int trimPos = langFilePre.Length - trimString.Length;
+                        langFilePre = langFilePre.Remove(trimPos, trimString.Length);
+                        string langFileEng = modPackPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
+                        langFileEng = UnfungePath(langFileEng);
+
+
+                        string langFileDest = modPackPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
+                        langFileDest = UnfungePath(langFileDest);
+
+                        File.Copy(langFileEng, langFileDest, true);
+                    }
+
+                }
+
+            }
+
+
+            foreach (string path in bs.modPackPaths)
+            {
+                if (Directory.Exists(path))
+                {
+                    TraverseTree(path, ".xml", RunLangToolProcess, ref modFilesInfo);
+
+                    //TraverseTree(path, ".xml", DeleteLng2XmlProcess, ref modFilesInfo);
+                }
+            }
+
+            return modFilesInfo;
+        }
+
         private static void BuildIHHookRelease(bool makeMod)
         {
             Console.WriteLine("making IHHook release");
@@ -565,7 +569,6 @@ namespace mgsv_buildmod {
 
             Console.WriteLine("copy IHHook dll");
             string destPath = ihhMakebiteBuildPath + @"\GameDir\";
-            //File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
 
             //tex copy readme so makebite builds it into metadata
             string ihh_readmeSource = @"D:\GitHub\IHHook\makebite\GameDir\mod\docs\IHHook-Readme.txt";
