@@ -1,4 +1,6 @@
-﻿using System;
+﻿//mgsv_buildmod
+//a house of cards built up over time to build and install infinite heaven file for development, or just build for release
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
