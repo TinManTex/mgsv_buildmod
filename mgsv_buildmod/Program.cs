@@ -52,7 +52,7 @@ namespace mgsv_buildmod {
             //static string patchArchive00Subpath = "\\00";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
-            public string ihHookPath = @"D:\GitHub\IHHook\x64\Debug\IHHook.dll";
+            public string ihHookPath = @"D:\GitHub\IHHook\x64\Release\IHHook.dll";
             public string ihHookProxyName = "dinput8.dll";
             public bool copyIHExt = false;
             public bool copyProxyDll = false;
@@ -164,27 +164,25 @@ namespace mgsv_buildmod {
             {
                 Console.WriteLine("making IHHook release");
                 string ihhookBuildFolder = @"C:\Projects\MGS\build\ihhook";
+                string ihh_makebiteSourcePath = @"D:\GitHub\IHHook\makebite";
                 string ihhMakebiteBuildPath = $"{ihhookBuildFolder}\\makebite\\";
+
                 ConsoleTitleAndWriteLine("deleting existing makebite build folder");
                 DeleteAndWait(ihhMakebiteBuildPath);//tex GOTCHA will complain if open in explorer
-                //Directory.CreateDirectory(ihhMakebiteBuildPath);
+
+                Directory.CreateDirectory(ihhMakebiteBuildPath);
+
+                Console.WriteLine("copy IHHook makebite folder");
+                CopyFilesRecursively(new DirectoryInfo(ihh_makebiteSourcePath), new DirectoryInfo(ihhMakebiteBuildPath), "", "");
+
+                Console.WriteLine("copy IHHook dll");
                 string destPath = ihhMakebiteBuildPath + @"\GameDir\";
-                if (!Directory.Exists(destPath))
-                {
-                    Directory.CreateDirectory(destPath);
-                }
-                File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
+                //File.Copy(bs.ihHookPath, destPath + bs.ihHookProxyName);
 
-                //copy metadata
-                string ihhMetaDataFilePath = ihhookBuildFolder + "\\" + "metadata.xml";
-                string ihhMetaDataDestFilePath = ihhMakebiteBuildPath + "\\" + "metadata.xml";
-                ConsoleTitleAndWriteLine("Copying ihhook metadata");
-                if (File.Exists(ihhMetaDataFilePath))
-                {
-                    File.Copy(ihhMetaDataFilePath, ihhMetaDataDestFilePath, true);
-                }
-
-                //DEBUGNOW copy ihhook docs
+                //tex copy readme so makebite builds it into metadata
+                string ihh_readmeSource = @"D:\GitHub\IHHook\makebite\GameDir\mod\docs\IHHook-Readme.txt";
+                string ihh_readmeDest = ihhMakebiteBuildPath + "\\Readme.txt";
+                File.Copy(ihh_readmeSource, ihh_readmeDest, true);
 
                 if (bs.makeMod)
                 {
