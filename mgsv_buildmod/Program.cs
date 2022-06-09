@@ -469,17 +469,23 @@ namespace mgsv_buildmod {
 
         private static void CopyIHExt(BuildModSettings bs)
         {
-            if (File.Exists(bs.ihExtPath) && bs.copyIHExt)
-            {
-                Console.WriteLine("copying IHExt");
-                string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
-                if (!Directory.Exists(destPath))
+            if (bs.copyIHExt) {
+                if (!File.Exists(bs.ihExtPath))
                 {
-                    Directory.CreateDirectory(destPath);
+                    Console.WriteLine("WARNING: could not find ihExtPath " + bs.ihExtPath);
                 }
-                File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
+                else 
+                {
+                    Console.WriteLine("copying IHExt");
+                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
+                    if (!Directory.Exists(destPath))
+                    {
+                        Directory.CreateDirectory(destPath);
+                    }
+                    File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
+                }
             }
-        }
+        }//CopyIHExt
 
         private static void CopyDocs(BuildModSettings bs)
         {
