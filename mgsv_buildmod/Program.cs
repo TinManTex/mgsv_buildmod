@@ -17,10 +17,6 @@ namespace mgsv_buildmod {
         class BuildModSettings {
             public string projectPath = @"D:\Projects\MGS\InfiniteHeaven\tpp";
 
-            //public string luaDataFilesSubpath = @"\dat1_dat-lua";//DEBUGNOW CULL and all references
-            public string luaPackFilesSubPath = @"\fpkd-combined-lua";
-
-            //public string luaDataFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\data1_dat-lua";//DEBUGNOW CULL and all references
             public string luaPackFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\fpkd-combined-lua";
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
@@ -29,10 +25,8 @@ namespace mgsv_buildmod {
                 // @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk",
                 // @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk-test",
             };
-            //public string projectPackFilesPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk";
-            //public string projectPackFilesPath_test = @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk-test";
 
-            public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";
+            public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when release: false, installOtherMods: true
 
             public string docsPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
@@ -40,16 +34,10 @@ namespace mgsv_buildmod {
             public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";
             public string modulesLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";
 
+            public string buildFolder = @"D:\Projects\MGS\build\infiniteheaven"; //tex: where the various files are actually pulled together before being makebitten      
             public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
 
-            public string buildFolder = @"D:\Projects\MGS\build\infiniteheaven";
-
             public string gamePath = @"D:\Games\Steam\SteamApps\common\MGS_TPP";
-
-
-            public string gameArchiveSubpath = @"\master";
-            public string targetGamePatchFolder0Subpath = @"\0";
-            //static string patchArchive00Subpath = "\\00";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
             public string ihHookPath = @"D:\GitHub\IHHook\x64\Release\IHHook.dll";
@@ -210,7 +198,6 @@ namespace mgsv_buildmod {
             ConsoleTitleAndWriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
-            //DEBUGNOW CULL TraverseTree(bs.luaDataFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             TraverseTree(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             //tex allow text files as subsituted
             //TraverseTree(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
@@ -254,14 +241,6 @@ namespace mgsv_buildmod {
                         string internalPath = buildFileInfo.fullPath.Substring(bs.luaPackFilesPath.Length);
                         luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
                     }
-                    //DEBUGNOW
-                    //else {
-                    //    //DEBUGNOW KLUDGE
-                    //    var sourcePath = bs.luaDataFilesPath;
-                    //    var targetPath = bs.makebiteBuildPath;
-
-                    //    luaFileDestination = buildFileInfo.fullPath.Replace(sourcePath, targetPath);
-                    //}
                     Console.WriteLine(luaFileDestination);
 
                     //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
@@ -505,7 +484,7 @@ namespace mgsv_buildmod {
                     File.Copy(sbmodCleanFilePath, sbmodFilePath, true);
                 }
 
-                string patchPath = bs.gamePath + bs.gameArchiveSubpath + bs.targetGamePatchFolder0Subpath;
+                string patchPath = $"{bs.gamePath}/master/0";
                 string sbclean00PathFull = patchPath + "\\" + "00.dat.sbclean";
                 string target00 = patchPath + "\\00.dat";
 
@@ -782,34 +761,7 @@ namespace mgsv_buildmod {
 
                 if (fileInfo.Extension == ".lua") {
                     buildFileInfo.fullPath = fileInfo.FullName;
-                    // tex find path relative to projectpath?
-                    // find 'data' 'pack' - set type
-                    // what about orginail archive? useful to more quickly find the inf/tool xml
-                    // figure out filepath /root (ie \archive\tpp\blah
-                    /*
-                    if (fileInfo.FullName.Contains(luaDataFilesSubpath))
-                    {
-                        // buildFileInfo.originalQar = "data1_dat";
-
-                        buildFileInfo.filePath = fileInfo.FullName.Substring(luaDataFilesPathFull.Length);
-                    } else if (fileInfo.FullName.Contains(luaPackFilesSubPath))
-                    {
-                        buildFileInfo.filePath = fileInfo.FullName.Substring(luaPackFilesPathFull.Length);
-                    }
-                    */
                 }
-                /* //CULL
-                 * else
-                {
-                    if (buildFileInfo.filePath != "")
-                    {
-                        buildFileInfo.fullPath = fileInfo.DirectoryName + buildFileInfo.filePath;
-                    } else
-                    {
-                        Console.WriteLine("cannot find FILEPATH: for " + fileInfo.FullName);
-                    }
-                }
-                */
             }
         }//ReadLuaBuildInfoProcess
 
