@@ -1,0 +1,27 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="mgsv_buildmod.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="gzsToolPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Projects\MGS\MGSVTOOLS\GzsTool\GzsTool.exe</Value>
+    </Setting>
+    <Setting Name="langToolPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Projects\MGS\MGSVTOOLS\FoxEngine.TranslationTool.v0.2.4\LangTool.exe</Value>
+    </Setting>
+    <Setting Name="foxToolPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Projects\MGS\MGSVTOOLS\FoxTool\FoxTool.exe</Value>
+    </Setting>
+    <Setting Name="subpToolPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Projects\MGS\MGSVTOOLS\FoxEngine.TranslationTool.v0.2.4\SubpTool.exe</Value>
+    </Setting>
+    <Setting Name="lbaToolPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\GitHub\LbaTool\LbaTool\bin\Debug\LbaTool.exe</Value>
+    </Setting>
+    <Setting Name="makeBitePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\GitHub\SnakeBite\makebite\bin\Debug\makebite.exe</Value>
+    </Setting>
+    <Setting Name="snakeBitePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\GitHub\SnakeBite\snakebite\bin\Debug\snakebite.exe</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

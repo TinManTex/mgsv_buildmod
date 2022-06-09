@@ -67,16 +67,6 @@ namespace mgsv_buildmod {
             public bool waitEnd = true;
         }//BuildModSettings
 
-        class ToolPathSettings {
-            public static string gzsToolPath = @"C:\Projects\MGS\MGSVTOOLS\GzsTool\GzsTool.exe";
-            public static string langToolPath = @"C:\Projects\MGS\MGSVTOOLS\FoxEngine.TranslationTool.v0.2.4\LangTool.exe";
-            public static string foxToolPath = @"C:\Projects\MGS\MGSVTOOLS\FoxTool\FoxTool.exe";
-            public static string subpToolPath = @"C:\Projects\MGS\MGSVTOOLS\FoxEngine.TranslationTool.v0.2.4\SubpTool.exe";
-            public static string lbaToolPath = @"D:\GitHub\LbaTool\LbaTool\bin\Debug\LbaTool.exe";
-            public static string makeBitePath = @"D:\GitHub\SnakeBite\makebite\bin\Debug\makebite.exe";
-            public static string snakeBitePath = @"D:\GitHub\SnakeBite\snakebite\bin\Debug\snakebite.exe";
-        }//ToolPathSettings
-
         public class BuildFileInfo {
             public string fullPath = "";
             public bool doBuild = false;
@@ -374,7 +364,7 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("makebite building " + snakeBiteMgvsFilePath);
                 string toolArgs = "";
                 toolArgs += bs.makebiteBuildPath;
-                UseTool(ToolPathSettings.makeBitePath, toolArgs);
+                UseTool(Properties.Settings.Default.makeBitePath, toolArgs);
 
                 if (!File.Exists(snakeBiteMgvsFilePath)) {
                     Console.WriteLine("Error! Cannot find " + snakeBiteMgvsFilePath);
@@ -405,7 +395,7 @@ namespace mgsv_buildmod {
                     snakeBiteArgs += " -d";//reset hash
                     //snakeBiteArgs += " -s";//skip cleanup
                     snakeBiteArgs += " -x";//exit
-                    UseTool(ToolPathSettings.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
+                    UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
                 }
             }
 
@@ -453,15 +443,6 @@ namespace mgsv_buildmod {
             JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
             serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
             string jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
-
-            File.WriteAllText(jsonOutPath, jsonStringOut);
-
-            var toolSettings = new ToolPathSettings();
-            jsonOutPath = @".\tools-config-example.json";
-            Console.WriteLine($"Writing default tools config to {jsonOutPath}");
-            serializeSettings = new JsonSerializerSettings();
-            serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-            jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
 
             File.WriteAllText(jsonOutPath, jsonStringOut);
         }
@@ -571,7 +552,7 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("makebite building " + ihhookMakeBiteMgvsFilePath);
                 string toolArgs = "";
                 toolArgs += ihhMakebiteBuildPath;
-                UseTool(ToolPathSettings.makeBitePath, toolArgs);
+                UseTool(Properties.Settings.Default.makeBitePath, toolArgs);
 
                 if (!File.Exists(ihhookMakeBiteMgvsFilePath)) {
                     Console.WriteLine("Error! Cannot find " + ihhookMakeBiteMgvsFilePath);
@@ -757,7 +738,7 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            UseTool(ToolPathSettings.langToolPath, fileInfo.FullName);
+            UseTool(Properties.Settings.Default.langToolPath, fileInfo.FullName);
         }
 
         public static void DeleteLng2XmlProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
@@ -785,7 +766,7 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            UseTool(ToolPathSettings.foxToolPath, fileInfo.FullName);
+            UseTool(Properties.Settings.Default.foxToolPath, fileInfo.FullName);
         }
 
         public static void RunSubpToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
@@ -793,7 +774,7 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            UseTool(ToolPathSettings.subpToolPath, fileInfo.FullName);
+            UseTool(Properties.Settings.Default.subpToolPath, fileInfo.FullName);
         }
 
         public static void RunLbaToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
@@ -801,7 +782,7 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            UseTool(ToolPathSettings.lbaToolPath, fileInfo.FullName);
+            UseTool(Properties.Settings.Default.lbaToolPath, fileInfo.FullName);
         }
 
         public static void RunGzToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
@@ -809,7 +790,7 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            UseTool(ToolPathSettings.gzsToolPath, fileInfo.FullName);
+            UseTool(Properties.Settings.Default.gzsToolPath, fileInfo.FullName);
         }
 
         public static void RunSnakeBiteProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
@@ -825,7 +806,7 @@ namespace mgsv_buildmod {
             snakeBiteArgs += " -s";//skip cleanup
             snakeBiteArgs += " -x";//exit
 
-            UseTool(ToolPathSettings.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
+            UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
         }
 
         /* CULL
