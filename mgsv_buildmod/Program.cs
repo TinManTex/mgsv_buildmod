@@ -1,5 +1,9 @@
 ﻿//mgsv_buildmod
-//a house of cards built up over time to build and install infinite heaven file for development, or just build for release
+//tex: a house of cards built up over time to build and install infinite heaven file for development, or just build for release
+//set tool paths via mgsv_buildmod.exe.config
+//run without any args to generate a .json of BuildModSettings
+//pass in path to a BuildModSettings .json to use it
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
