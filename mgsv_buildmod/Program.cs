@@ -132,28 +132,13 @@ namespace mgsv_buildmod {
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
             BuildIHHookRelease(bs.makeMod);
-
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
-
-
             ConsoleTitleAndWriteLine("Copy docs and exes");
             CopyDocs(bs);
-
-            if (bs.release)
-            {
-                if (File.Exists(bs.ihExtPath) && bs.copyIHExt)
-                {
-                    Console.WriteLine("copying IHExt");
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
-                    if (!Directory.Exists(destPath))
-                    {
-                        Directory.CreateDirectory(destPath);
-                    }
-                    File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
-                }
+            if (bs.release) {
+                CopyIHExt(bs);
             }
-
 
             string modVersion = bs.modVersionDefault;
 
@@ -481,6 +466,20 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void CopyIHExt(BuildModSettings bs)
+        {
+            if (File.Exists(bs.ihExtPath) && bs.copyIHExt)
+            {
+                Console.WriteLine("copying IHExt");
+                string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
+                if (!Directory.Exists(destPath))
+                {
+                    Directory.CreateDirectory(destPath);
+                }
+                File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
+            }
+        }
 
         private static void CopyDocs(BuildModSettings bs)
         {
