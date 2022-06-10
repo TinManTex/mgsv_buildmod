@@ -52,6 +52,8 @@ namespace mgsv_buildmod {
             public string modFileName = "Infinite Heaven";
             public string readMeName = "Infinite Heaven Readme.txt";
 
+            public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
+
             public bool cleanDat = true;
 
             public bool buildLng2s = true;
@@ -96,7 +98,7 @@ namespace mgsv_buildmod {
         static void Main(string[] args) {
 
             Console.Title = titlePrefix;
-            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");
+            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log
 
             if (args.Length == 0) {
                 Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
@@ -123,13 +125,15 @@ namespace mgsv_buildmod {
             }
 
 
-            String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
+            String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
 
             BuildIHHookRelease(bs.makeMod);
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
             ConsoleTitleAndWriteLine("Copy docs and exes");
-            CopyDocs(bs);
+            if (bs.copyDocsToBuild) {
+                CopyDocsToBuild(bs);
+            }
             if (bs.release) {
                 CopyIHExt(bs);
             }
@@ -290,20 +294,6 @@ namespace mgsv_buildmod {
                 }
             }
 
-            if (bs.release) {
-                ConsoleTitleAndWriteLine("copy docs");//DEBUGNOW then what about copy docs above?
-                //tex in case I forget to update docs in gamedir-release
-                string docsDestinationPath = bs.makebiteBuildPath + @"\GameDir\mod\docs";
-                if (Directory.Exists(docsDestinationPath)) {
-                    DeleteAndWait(docsDestinationPath);
-                }
-                if (!Directory.Exists(docsDestinationPath)) {
-                    Directory.CreateDirectory(docsDestinationPath);
-                }
-                CopyFilesRecursively(new DirectoryInfo(bs.docsPath), new DirectoryInfo(docsDestinationPath), "", "");
-            }
-
-
             string snakeBiteMgvsDestFilePath = bs.buildFolder + "\\" + bs.modFileName + ".mgsv";
             string snakeBiteMgvsFilePath = bs.makebiteBuildPath + "\\" + "mod.mgsv";
             //tex for if I change makebite from building inputfoldername\\mod.mgsv to build inputpathparent\inputfoldername.mgsv
@@ -433,7 +423,7 @@ namespace mgsv_buildmod {
             }
         }//CopyIHExt
 
-        private static void CopyDocs(BuildModSettings bs) {
+        private static void CopyDocsToBuild(BuildModSettings bs) {
             if (Directory.Exists(bs.docsPath)) {
                 Console.Title = titlePrefix + "Copy docs";
                 Console.WriteLine("copying docs files to build folder");
