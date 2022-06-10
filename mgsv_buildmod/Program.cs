@@ -27,9 +27,9 @@ namespace mgsv_buildmod {
             //then are copied outright to makebitepath
             ///so need to be in makebiteable layout
             public List<string> modPackPaths = new List<string> {
-                //@"C:\Projects\MGS\InfiniteHeaven\tpp-release\ih-data1_dat-lua",
-                //@"C:\Projects\MGS\InfiniteHeaven\tpp-release\fpk-mod",
-                //@"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
+                @"C:\Projects\MGS\InfiniteHeaven\tpp-release\ih-data1_dat-lua",
+                @"C:\Projects\MGS\InfiniteHeaven\tpp-release\fpk-mod",
+                @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
             public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when release: false, installOtherMods: true
@@ -56,14 +56,25 @@ namespace mgsv_buildmod {
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
-            public bool cleanDat = true;
+            public bool cleanDat = false;
 
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
+
+            public Dictionary<string, bool> fileTypesToCompile = new Dictionary<string, bool>() {
+                {".fox2.xml", true },
+                {".sdf.xml", true },
+                {".parts.xml", true },
+                {".tgt.xml", true },
+                {".lba.xml", true },
+                {".lng2.xml", true },
+            };
 
             public bool buildLng2s = true;
             public bool buildSubps = false;
             public bool buildFox2s = true;
             public bool buildLbas = true;
+
+
             public bool copyModPackFolders = true;
             //tex copies internalLuaPath/core external lua to internal
             //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
@@ -101,7 +112,8 @@ namespace mgsv_buildmod {
         public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
         static void Main(string[] args) {
-
+            var runWatch = new Stopwatch();
+            runWatch.Start();
             Console.Title = titlePrefix;
             var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log
 
@@ -190,7 +202,9 @@ namespace mgsv_buildmod {
                 CopyEngLng2sToOtherLangCodes(bs);
             }
 
-            //TODO: problem subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
+            //TODO: problem: subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
+            //TODO: add other fox2 types, and other tools, in IH cull the .xml files of those you haven't actually modified and use the original retail files
+            //TODO: even though I've just toolspaths to Properties.Settings, this is making me think of moving to toolspaths .json in exe dir
             var fileTypesToCompileToolPaths = new Dictionary<string, string>() {
                 {".fox2.xml", Properties.Settings.Default.foxToolPath },
                 {".sdf.xml", Properties.Settings.Default.foxToolPath },
@@ -198,15 +212,6 @@ namespace mgsv_buildmod {
                 {".tgt.xml", Properties.Settings.Default.foxToolPath },
                 {".lba.xml", Properties.Settings.Default.lbaToolPath },
                 {".lng2.xml", Properties.Settings.Default.langToolPath },
-            };
-            //tex TODO: might be better to throw the fileType: bool into buildsettings directly
-            var fileTypesToCompile = new Dictionary<string, bool>() {
-                {".fox2.xml", bs.buildFox2s },
-                {".sdf.xml", bs.buildFox2s },
-                {".parts.xml", bs.buildFox2s },
-                {".tgt.xml", bs.buildFox2s },
-                {".lba.xml", bs.buildLbas },
-                {".lng2.xml", bs.buildLng2s },
             };
 
             Console.WriteLine("Getting modPackPaths list");
@@ -217,7 +222,7 @@ namespace mgsv_buildmod {
             taskWatch.Start();
             var tasks = new List<Task>();
             foreach (var filePath in modPackFiles) {
-                foreach (var item in fileTypesToCompile) {
+                foreach (var item in bs.fileTypesToCompile) {
                     if (filePath.Contains(item.Key) && item.Value == true) {
                         //Console.WriteLine(filePath);//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
                         //don't need to inform the user of progress of something thats only going to take a few seconds, moreso if doing so will double that time.
@@ -395,7 +400,8 @@ namespace mgsv_buildmod {
                 }
             }
 
-            ConsoleTitleAndWriteLine("done");
+            runWatch.Stop();
+            ConsoleTitleAndWriteLine($"done in {runWatch.ElapsedMilliseconds}ms");
             if (bs.waitEnd) {
                 ConsoleTitleAndWriteLine("press any key to exit");
                 Console.ReadKey();
@@ -838,7 +844,7 @@ namespace mgsv_buildmod {
             foreach (FileInfo file in source.GetFiles()) {
                 if (exclude == "" || file.Extension != exclude) {
                     if (extension == "" || file.Extension == extension) {
-                        Console.WriteLine(file.Name);
+                        //Console.WriteLine(file.Name);
                         File.Copy(file.FullName, Path.Combine(target.FullName, file.Name), true);
                     }
                 }
