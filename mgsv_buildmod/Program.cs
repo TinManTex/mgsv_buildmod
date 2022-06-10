@@ -19,9 +19,9 @@ using System.Collections.Concurrent;
 namespace mgsv_buildmod {
     class Program {
         class BuildModSettings {
-            public string projectPath = @"D:\Projects\MGS\InfiniteHeaven\tpp";
+            public string projectPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
 
-            public string luaPackFilesPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\fpkd-combined-lua";
+            public string luaPackFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
@@ -32,18 +32,18 @@ namespace mgsv_buildmod {
                 @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
-            public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when release: false, installOtherMods: true
+            public string otherMgsvsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when release: false, installOtherMods: true
 
-            public string docsPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
+            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
-            public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyInternalLua
-            public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua
-            public string modulesLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
+            public string internalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyInternalLua
+            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua
+            public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
 
-            public string buildFolder = @"D:\Projects\MGS\build\infiniteheaven"; //tex: where the various files are actually pulled together before being makebitten      
-            public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
+            public string buildFolder = @"C:\Projects\MGS\build\infiniteheaven"; //tex: where the various files are actually pulled together before being makebitten      
+            public string makebiteBuildPath = @"C:\Projects\MGS\build\infiniteheaven\makebite";
 
-            public string gamePath = @"D:\Games\Steam\SteamApps\common\MGS_TPP";
+            public string gamePath = @"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
             public bool copyIHExt = false; //tex only run on release
@@ -68,12 +68,6 @@ namespace mgsv_buildmod {
                 {".lba.xml", true },
                 {".lng2.xml", true },
             };
-
-            public bool buildLng2s = true;
-            public bool buildSubps = false;
-            public bool buildFox2s = true;
-            public bool buildLbas = true;
-
 
             public bool copyModPackFolders = true;
             //tex copies internalLuaPath/core external lua to internal
@@ -215,7 +209,7 @@ namespace mgsv_buildmod {
             };
 
             Console.WriteLine("Getting modPackPaths list");
-            var modPackFiles = bs.modPackPaths.AsParallel().SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
+            var modPackFiles = bs.modPackPaths.SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
 
             Console.WriteLine("Compiling modPackPaths files");
             var taskWatch = new Stopwatch();
@@ -224,9 +218,9 @@ namespace mgsv_buildmod {
             foreach (var filePath in modPackFiles) {
                 foreach (var item in bs.fileTypesToCompile) {
                     if (filePath.Contains(item.Key) && item.Value == true) {
-                        //Console.WriteLine(filePath);//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
+                        //Console.WriteLine($"filePath: {filePath}");//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
                         //don't need to inform the user of progress of something thats only going to take a few seconds, moreso if doing so will double that time.
-                        tasks.Add(Task.Run(() => UseToolParallel(fileTypesToCompileToolPaths[item.Key], filePath)));
+                        tasks.Add(Task.Run(() => UseTool(fileTypesToCompileToolPaths[item.Key], filePath)));
                         //UseTool(fileTypesToCompileToolPaths[item.Key], filePath);//DEBUGNOW
                     }
                 }
@@ -789,42 +783,9 @@ namespace mgsv_buildmod {
             UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
         }
 
-        /* CULL
-        private static string UsePackTool(string packPath, bool pack) {
-            Process p = new Process();
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.FileName = gzsToolPath;
-            p.StartInfo.Arguments = packPath;
-            if (pack) {
-                p.StartInfo.Arguments += ".xml";
-            }
-            p.Start();
-
-            string output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
-            var exitCode = p.ExitCode;
-            return output;
-        }*/
-        //DEBUGNOW
-        private static void UseToolParallel(string toolPath, string args) {
+        private static void UseTool(string toolPath, string args) {
             //Console.WriteLine(toolPath);
             //Console.WriteLine(args);
-            Process p = new Process();
-            p.StartInfo.UseShellExecute = false;
-            // p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.WorkingDirectory = Path.GetDirectoryName(toolPath);
-            p.StartInfo.FileName = toolPath;
-            p.StartInfo.Arguments = args;
-            p.Start();
-            //string output = p.StandardOutput.ReadToEnd(); //tex (m/sn)akebite doesn't have output. TODO: or does it, I know Topher added logging at some point
-            //p.WaitForExit();
-            //var exitCode = p.ExitCode;
-            // return output;
-        }
-        private static void UseTool(string toolPath, string args) {
-            Console.WriteLine(toolPath);
-            Console.WriteLine(args);
             Process p = new Process();
             p.StartInfo.UseShellExecute = false;
             // p.StartInfo.RedirectStandardOutput = true;
