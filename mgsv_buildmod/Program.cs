@@ -23,18 +23,20 @@ namespace mgsv_buildmod {
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
+            ///so need to be in makebiteable layout
             public List<string> modPackPaths = new List<string> {
-                // @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk",
-                // @"D:\Projects\MGS\InfiniteHeaven\tpp\modfpk-test",
+                //@"C:\Projects\MGS\InfiniteHeaven\tpp-release\ih-data1_dat-lua",
+                //@"C:\Projects\MGS\InfiniteHeaven\tpp-release\fpk-mod",
+                //@"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
             public string otherMgsvsPath = @"D:\Projects\MGS\!InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when release: false, installOtherMods: true
 
             public string docsPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
-            public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";
-            public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";
-            public string modulesLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";
+            public string internalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyInternalLua
+            public string externalLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua
+            public string modulesLuaPath = @"D:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
 
             public string buildFolder = @"D:\Projects\MGS\build\infiniteheaven"; //tex: where the various files are actually pulled together before being makebitten      
             public string makebiteBuildPath = @"D:\Projects\MGS\build\infiniteheaven\makebite";
@@ -42,7 +44,7 @@ namespace mgsv_buildmod {
             public string gamePath = @"D:\Games\Steam\SteamApps\common\MGS_TPP";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
-            public bool copyIHExt = false;
+            public bool copyIHExt = false; //tex only run on release
 
 
             // TODO: just point to sperate file
@@ -57,13 +59,19 @@ namespace mgsv_buildmod {
             public bool buildFox2s = true;
             public bool buildLbas = true;
             public bool copyModPackFolders = true;
-            public bool copyInternalLua = false;//tex copies core external lua to internal (ih will still try to load external by default, so do not include in gamedir-mod\release)
-            public bool copyExternalLua = false;//tex copies external to makeBite/GameDir (WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release).
-            public bool copyModulesToInternal = false;//copies external lua modules to internal
+            //tex copies internalLuaPath/core external lua to internal
+            //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
+            public bool copyInternalLua = false;
 
-            public bool makeMod = true;
-            public bool installMod = true;
-            public bool installOtherMods = true;
+            //tex copies externalLuaPath to makeBite/GameDir
+            //WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release, since for non release I have symlinked game path/mod to externalLuaPath
+            public bool copyExternalLua = false;
+
+            public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
+
+            public bool makeMod = true; //tex run makebite on built mod
+            public bool installMod = true;//tex install build mod, not run if release
+            public bool installOtherMods = true;//tex install .mgsvs in otherMgsvsPath (done before actual mod), not run if release
 
             public bool release = false;//DEBUGNOW dont forget to also set copyExternalLua true
 
@@ -525,7 +533,7 @@ namespace mgsv_buildmod {
 
             return modFilesInfo;
         }
-
+        //CULL this should be handled by ihhook repo now that it's unbundled
         private static void BuildIHHookRelease(bool makeMod) {
             Console.WriteLine("making IHHook release");
             string ihhookBuildFolder = @"C:\Projects\MGS\build\ihhook";
