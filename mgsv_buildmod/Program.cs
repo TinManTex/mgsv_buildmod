@@ -93,7 +93,8 @@ namespace mgsv_buildmod {
             return unfucked;
         }
 
-        public delegate void ProcessFileDelegate(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
+        public delegate void ProcessFileDelegate(FileInfo fileInfo);
+        public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
         static void Main(string[] args) {
 
@@ -148,37 +149,14 @@ namespace mgsv_buildmod {
             ConsoleTitleAndWriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
-            TraverseTree(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
-            //tex allow text files as subsituted
-            //TraverseTree(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            TraverseTreeFileInfoList(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            //tex allow text files as subsituted //TODO wut
+            //TraverseTreeFileInfoList(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
             if (modFilesInfo.Count == 0) {
+                //DEBUGNOW hmm
                 Console.WriteLine("no mod files found");
                 return;
             }
-
-            /*
-            Console.WriteLine();
-            Console.WriteLine("building list of fpks used");
-            Dictionary<string, List<BuildFileInfo>> fpks = new Dictionary<string, List<BuildFileInfo>>();
-            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values)
-            {
-                if (buildFileInfo.doBuild)
-                {
-                    if (IsForFpk(buildFileInfo))
-                    {
-                        List<BuildFileInfo> filesForFpk;
-                        if (!fpks.TryGetValue(buildFileInfo.packPath, out filesForFpk))
-                        {
-                            filesForFpk = new List<BuildFileInfo>();
-                            fpks.Add(buildFileInfo.packPath, filesForFpk);
-                            Console.WriteLine("fpklistadd:" + buildFileInfo.packPath);
-                        }
-
-                        filesForFpk.Add(buildFileInfo);
-                    }
-                }
-            }
-            */
 
             Console.WriteLine();
 
@@ -205,14 +183,14 @@ namespace mgsv_buildmod {
             }
 
             if (bs.buildLng2s) {
-                modFilesInfo = BuildLng2s(bs, modFilesInfo);
+                BuildLng2s(bs, modFilesInfo);
             }
 
             if (bs.buildFox2s) {
                 ConsoleTitleAndWriteLine("building fox2s");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunFoxToolProcess, ref modFilesInfo);
+                        TraverseTree(path, ".xml", RunFoxToolProcess);
                     }
                 }
             }
@@ -222,7 +200,7 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("building subps");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunSubpToolProcess, ref modFilesInfo);
+                        TraverseTree(path, ".xml", RunSubpToolProcess);
                     }
                 }
             }
@@ -231,7 +209,7 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("building lbas");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunLbaToolProcess, ref modFilesInfo);
+                        TraverseTree(path, ".xml", RunLbaToolProcess);
                     }
                 }
             }
@@ -385,7 +363,7 @@ namespace mgsv_buildmod {
             if (bs.release == false) {
                 if (bs.installOtherMods) {
                     ConsoleTitleAndWriteLine("running snakebite on othermods");
-                    TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess, ref modFilesInfo);
+                    TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess);
                 }
 
                 if (bs.installMod) {
@@ -449,25 +427,19 @@ namespace mgsv_buildmod {
             File.WriteAllText(jsonOutPath, jsonStringOut);
         }
 
-        private static Dictionary<string, BuildFileInfo> BuildLng2s(BuildModSettings bs, Dictionary<string, BuildFileInfo> modFilesInfo) {
+        private static void BuildLng2s(BuildModSettings bs, Dictionary<string, BuildFileInfo> modFilesInfo) {
             ConsoleTitleAndWriteLine("building lng2s");
-            //tex copy over lang files to other lang coded
+            //tex copy lang files to other lang codes
             List<string> langCodes = new List<string> {
-                    //"eng",
-                    "fre",
-                    "ger",
-                    "ita",
-                    "jpn",
-                    "por",
-                    "rus",
-                    "spa"
-                };
-
-            //tex KLUDGE ugh
-            List<string> langFilesPre = new List<string> {
-                    "ih_general",
-                    "ih_quest",
-                };
+                //"eng",
+                "fre",
+                "ger",
+                "ita",
+                "jpn",
+                "por",
+                "rus",
+                "spa"
+            };
 
             string lngPackPath = @"\Assets\tpp\pack\ui\lang";
             string lngInternalPath = @"\Assets\tpp\lang\ui\";
@@ -508,21 +480,18 @@ namespace mgsv_buildmod {
                         File.Copy(langFileEng, langFileDest, true);
                     }
 
-                }
-
-            }
+                }//foreach langCode
+            }//foreach modPackPath
 
 
             foreach (string path in bs.modPackPaths) {
                 if (Directory.Exists(path)) {
-                    TraverseTree(path, ".xml", RunLangToolProcess, ref modFilesInfo);
+                    TraverseTree(path, ".xml", RunLangToolProcess);
 
-                    //TraverseTree(path, ".xml", DeleteLng2XmlProcess, ref modFilesInfo);
+                    //TraverseTree(path, ".xml", DeleteLng2XmlProcess);
                 }
             }
-
-            return modFilesInfo;
-        }
+        }//BuildLng2s
         //CULL this should be handled by ihhook repo now that it's unbundled
         private static void BuildIHHookRelease(bool makeMod) {
             Console.WriteLine("making IHHook release");
@@ -605,7 +574,62 @@ namespace mgsv_buildmod {
             return buildFileInfo.packPath != "";
         }
 
-        public static void TraverseTree(string root, string extension, ProcessFileDelegate processFile, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void TraverseTree(string root, string extension, ProcessFileDelegate processFile) {
+            Stack<string> dirs = new Stack<string>(20);
+
+            if (!System.IO.Directory.Exists(root)) {
+                throw new ArgumentException();
+            }
+            dirs.Push(root);
+
+            while (dirs.Count > 0) {
+                string currentDir = dirs.Pop();
+                string[] subDirs;
+                try {
+                    subDirs = System.IO.Directory.GetDirectories(currentDir);
+                }
+                catch (UnauthorizedAccessException e) {
+                    Console.WriteLine(e.Message);
+                    continue;
+                }
+                catch (System.IO.DirectoryNotFoundException e) {
+                    Console.WriteLine(e.Message);
+                    continue;
+                }
+
+                string[] files = null;
+                try {
+                    files = System.IO.Directory.GetFiles(currentDir);
+                }
+                catch (UnauthorizedAccessException e) {
+                    Console.WriteLine(e.Message);
+                    continue;
+                }
+                catch (System.IO.DirectoryNotFoundException e) {
+                    Console.WriteLine(e.Message);
+                    continue;
+                }
+
+                foreach (string file in files) {
+                    try {
+
+                        System.IO.FileInfo fi = new System.IO.FileInfo(file);
+                        if (fi.Extension == extension) {
+                            processFile(fi);
+                        }
+                    }
+                    catch (System.IO.FileNotFoundException e) {
+                        Console.WriteLine(e.Message);
+                        continue;
+                    }
+                }
+
+                foreach (string str in subDirs)
+                    dirs.Push(str);
+            }
+        }//TraverseTree
+        //TODO: only difference between this and TraverseTree is extra param being passed into processFile delegate
+        public static void TraverseTreeFileInfoList(string root, string extension, ProcessFileDelegateBuildFileInfoList processFile, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
             Stack<string> dirs = new Stack<string>(20);
 
             if (!System.IO.Directory.Exists(root)) {
@@ -658,7 +682,7 @@ namespace mgsv_buildmod {
                 foreach (string str in subDirs)
                     dirs.Push(str);
             }
-        }//TraverseTree
+        }//TraverseTreeFileInfoList
 
         public static void ReadLuaBuildInfoProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
 
@@ -735,7 +759,7 @@ namespace mgsv_buildmod {
             }
         }//ReadLuaBuildInfoProcess
 
-        public static void RunLangToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void RunLangToolProcess(FileInfo fileInfo) {
             if (!fileInfo.Name.Contains(".lng2.xml")) {
                 return;
             }
@@ -743,7 +767,7 @@ namespace mgsv_buildmod {
             UseTool(Properties.Settings.Default.langToolPath, fileInfo.FullName);
         }
 
-        public static void DeleteLng2XmlProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void DeleteLng2XmlProcess(FileInfo fileInfo) {
             if (fileInfo.Name.Contains(".lng2.xml")) {
                 fileInfo.Delete();
             }
@@ -756,7 +780,7 @@ namespace mgsv_buildmod {
             ".tgt",
         };
 
-        public static void RunFoxToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void RunFoxToolProcess(FileInfo fileInfo) {
             bool isFox2Type = false;
             foreach (string fox2Type in fox2Types) {
                 if (fileInfo.Name.Contains(fox2Type + ".xml")) {
@@ -771,7 +795,7 @@ namespace mgsv_buildmod {
             UseTool(Properties.Settings.Default.foxToolPath, fileInfo.FullName);
         }
 
-        public static void RunSubpToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void RunSubpToolProcess(FileInfo fileInfo) {
             if (!fileInfo.Name.Contains(".xml")) {
                 return;
             }
@@ -779,7 +803,7 @@ namespace mgsv_buildmod {
             UseTool(Properties.Settings.Default.subpToolPath, fileInfo.FullName);
         }
 
-        public static void RunLbaToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void RunLbaToolProcess(FileInfo fileInfo) {
             if (!fileInfo.Name.Contains(".lba.xml")) {
                 return;
             }
@@ -787,7 +811,7 @@ namespace mgsv_buildmod {
             UseTool(Properties.Settings.Default.lbaToolPath, fileInfo.FullName);
         }
 
-        public static void RunGzToolProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void RunGzToolProcess(FileInfo fileInfo) {
             if (!fileInfo.Name.Contains(".fpk.xml") && !fileInfo.Name.Contains(".fpkd.xml")) {
                 return;
             }
@@ -795,7 +819,7 @@ namespace mgsv_buildmod {
             UseTool(Properties.Settings.Default.gzsToolPath, fileInfo.FullName);
         }
 
-        public static void RunSnakeBiteProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
+        public static void RunSnakeBiteProcess(FileInfo fileInfo) {
             if (!fileInfo.Name.Contains(".mgsv")) {
                 return;
             }
