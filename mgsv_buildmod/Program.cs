@@ -13,6 +13,8 @@ using System.Reflection;
 using System.Xml.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace mgsv_buildmod {
     class Program {
@@ -56,6 +58,8 @@ namespace mgsv_buildmod {
 
             public bool cleanDat = true;
 
+            public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
+
             public bool buildLng2s = true;
             public bool buildSubps = false;
             public bool buildFox2s = true;
@@ -93,7 +97,7 @@ namespace mgsv_buildmod {
             return unfucked;
         }
 
-        public delegate void ProcessFileDelegate(FileInfo fileInfo);
+        public delegate void ProcessFileDelegate(string fileName);
         public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
         static void Main(string[] args) {
@@ -182,37 +186,49 @@ namespace mgsv_buildmod {
                 }
             }
 
-            if (bs.buildLng2s) {
-                BuildLng2s(bs, modFilesInfo);
+            if (bs.copyEngLng2sToOtherLangCodes) {
+                CopyEngLng2sToOtherLangCodes(bs);
             }
 
-            if (bs.buildFox2s) {
-                ConsoleTitleAndWriteLine("building fox2s");
-                foreach (string path in bs.modPackPaths) {
-                    if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunFoxToolProcess);
-                    }
-                }
-            }
+            //TODO: problem subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
+            var fileTypesToCompileToolPaths = new Dictionary<string, string>() {
+                {".fox2.xml", Properties.Settings.Default.foxToolPath },
+                {".sdf.xml", Properties.Settings.Default.foxToolPath },
+                {".parts.xml", Properties.Settings.Default.foxToolPath },
+                {".tgt.xml", Properties.Settings.Default.foxToolPath },
+                {".lba.xml", Properties.Settings.Default.lbaToolPath },
+                {".lng2.xml", Properties.Settings.Default.langToolPath },
+            };
+            //tex TODO: might be better to throw the fileType: bool into buildsettings directly
+            var fileTypesToCompile = new Dictionary<string, bool>() {
+                {".fox2.xml", bs.buildFox2s },
+                {".sdf.xml", bs.buildFox2s },
+                {".parts.xml", bs.buildFox2s },
+                {".tgt.xml", bs.buildFox2s },
+                {".lba.xml", bs.buildLbas },
+                {".lng2.xml", bs.buildLng2s },
+            };
 
-            bs.buildSubps = false;//DEBUGNOW 
-            if (bs.buildSubps) {
-                ConsoleTitleAndWriteLine("building subps");
-                foreach (string path in bs.modPackPaths) {
-                    if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunSubpToolProcess);
-                    }
-                }
-            }
+            Console.WriteLine("Getting modPackPaths list");
+            var modPackFiles = bs.modPackPaths.AsParallel().SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
 
-            if (bs.buildLbas) {
-                ConsoleTitleAndWriteLine("building lbas");
-                foreach (string path in bs.modPackPaths) {
-                    if (Directory.Exists(path)) {
-                        TraverseTree(path, ".xml", RunLbaToolProcess);
+            Console.WriteLine("Compiling modPackPaths files");
+            var taskWatch = new Stopwatch();
+            taskWatch.Start();
+            var tasks = new List<Task>();
+            foreach (var filePath in modPackFiles) {
+                foreach (var item in fileTypesToCompile) {
+                    if (filePath.Contains(item.Key) && item.Value == true) {
+                        //Console.WriteLine(filePath);//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
+                        //don't need to inform the user of progress of something thats only going to take a few seconds, moreso if doing so will double that time.
+                        tasks.Add(Task.Run(() => UseToolParallel(fileTypesToCompileToolPaths[item.Key], filePath)));
+                        //UseTool(fileTypesToCompileToolPaths[item.Key], filePath);//DEBUGNOW
                     }
                 }
-            }
+            }//foreach modPackPath
+            Task.WaitAll(tasks.ToArray());
+            taskWatch.Stop();
+            Console.WriteLine($"time to compile: {taskWatch.ElapsedMilliseconds}ms");
 
             if (bs.copyModPackFolders) {
                 Console.WriteLine();
@@ -381,6 +397,7 @@ namespace mgsv_buildmod {
 
             ConsoleTitleAndWriteLine("done");
             if (bs.waitEnd) {
+                ConsoleTitleAndWriteLine("press any key to exit");
                 Console.ReadKey();
             }
         }//Main
@@ -427,9 +444,8 @@ namespace mgsv_buildmod {
             File.WriteAllText(jsonOutPath, jsonStringOut);
         }
 
-        private static void BuildLng2s(BuildModSettings bs, Dictionary<string, BuildFileInfo> modFilesInfo) {
-            ConsoleTitleAndWriteLine("building lng2s");
-            //tex copy lang files to other lang codes
+        private static void CopyEngLng2sToOtherLangCodes(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copy eng lang files to other lang codes");
             List<string> langCodes = new List<string> {
                 //"eng",
                 "fre",
@@ -482,16 +498,8 @@ namespace mgsv_buildmod {
 
                 }//foreach langCode
             }//foreach modPackPath
+        }//CopyEngLng2sToOtherLangCodes
 
-
-            foreach (string path in bs.modPackPaths) {
-                if (Directory.Exists(path)) {
-                    TraverseTree(path, ".xml", RunLangToolProcess);
-
-                    //TraverseTree(path, ".xml", DeleteLng2XmlProcess);
-                }
-            }
-        }//BuildLng2s
         //CULL this should be handled by ihhook repo now that it's unbundled
         private static void BuildIHHookRelease(bool makeMod) {
             Console.WriteLine("making IHHook release");
@@ -615,7 +623,7 @@ namespace mgsv_buildmod {
 
                         System.IO.FileInfo fi = new System.IO.FileInfo(file);
                         if (fi.Extension == extension) {
-                            processFile(fi);
+                            processFile(fi.FullName);
                         }
                     }
                     catch (System.IO.FileNotFoundException e) {
@@ -759,72 +767,12 @@ namespace mgsv_buildmod {
             }
         }//ReadLuaBuildInfoProcess
 
-        public static void RunLangToolProcess(FileInfo fileInfo) {
-            if (!fileInfo.Name.Contains(".lng2.xml")) {
+        public static void RunSnakeBiteProcess(string fileName) {
+            if (!fileName.Contains(".mgsv")) {
                 return;
             }
 
-            UseTool(Properties.Settings.Default.langToolPath, fileInfo.FullName);
-        }
-
-        public static void DeleteLng2XmlProcess(FileInfo fileInfo) {
-            if (fileInfo.Name.Contains(".lng2.xml")) {
-                fileInfo.Delete();
-            }
-        }
-
-        static string[] fox2Types = {
-            ".fox2",
-            ".sdf",
-            ".parts",
-            ".tgt",
-        };
-
-        public static void RunFoxToolProcess(FileInfo fileInfo) {
-            bool isFox2Type = false;
-            foreach (string fox2Type in fox2Types) {
-                if (fileInfo.Name.Contains(fox2Type + ".xml")) {
-                    isFox2Type = true;
-                    break;
-                }
-            }
-            if (!isFox2Type) {
-                return;
-            }
-
-            UseTool(Properties.Settings.Default.foxToolPath, fileInfo.FullName);
-        }
-
-        public static void RunSubpToolProcess(FileInfo fileInfo) {
-            if (!fileInfo.Name.Contains(".xml")) {
-                return;
-            }
-
-            UseTool(Properties.Settings.Default.subpToolPath, fileInfo.FullName);
-        }
-
-        public static void RunLbaToolProcess(FileInfo fileInfo) {
-            if (!fileInfo.Name.Contains(".lba.xml")) {
-                return;
-            }
-
-            UseTool(Properties.Settings.Default.lbaToolPath, fileInfo.FullName);
-        }
-
-        public static void RunGzToolProcess(FileInfo fileInfo) {
-            if (!fileInfo.Name.Contains(".fpk.xml") && !fileInfo.Name.Contains(".fpkd.xml")) {
-                return;
-            }
-
-            UseTool(Properties.Settings.Default.gzsToolPath, fileInfo.FullName);
-        }
-
-        public static void RunSnakeBiteProcess(FileInfo fileInfo) {
-            if (!fileInfo.Name.Contains(".mgsv")) {
-                return;
-            }
-
-            string snakeBiteMgsvPath = "\"" + fileInfo.FullName + "\"";
+            string snakeBiteMgsvPath = "\"" + fileName + "\"";
             string snakeBiteArgs = "";
             snakeBiteArgs += " -i";//install
             snakeBiteArgs += " -c";//no conflict check
@@ -852,8 +800,22 @@ namespace mgsv_buildmod {
             var exitCode = p.ExitCode;
             return output;
         }*/
-
-
+        //DEBUGNOW
+        private static void UseToolParallel(string toolPath, string args) {
+            //Console.WriteLine(toolPath);
+            //Console.WriteLine(args);
+            Process p = new Process();
+            p.StartInfo.UseShellExecute = false;
+            // p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.WorkingDirectory = Path.GetDirectoryName(toolPath);
+            p.StartInfo.FileName = toolPath;
+            p.StartInfo.Arguments = args;
+            p.Start();
+            //string output = p.StandardOutput.ReadToEnd(); //tex (m/sn)akebite doesn't have output. TODO: or does it, I know Topher added logging at some point
+            //p.WaitForExit();
+            //var exitCode = p.ExitCode;
+            // return output;
+        }
         private static void UseTool(string toolPath, string args) {
             Console.WriteLine(toolPath);
             Console.WriteLine(args);
