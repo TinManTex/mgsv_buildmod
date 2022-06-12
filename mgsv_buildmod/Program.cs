@@ -23,9 +23,9 @@ using System.Collections.Concurrent;
 namespace mgsv_buildmod {
     class Program {
         class BuildModSettings {
-            public string projectPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
+            public string projectPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";//tex TODO: rethink, currently ony for copying last built mgsv 
 
-            public string luaPackFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";
+            public string luaPackFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaPackFiles 
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
@@ -43,6 +43,8 @@ namespace mgsv_buildmod {
             public string externalAssetsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyExternalAssetsToInternal
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
+            public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
+
 
             public string buildFolder = @"C:\Projects\MGS\build\infiniteheaven"; //tex: where the various files are actually pulled together before being makebitten      
             public string makebiteBuildPath = @"C:\Projects\MGS\build\infiniteheaven\makebite";
@@ -73,6 +75,7 @@ namespace mgsv_buildmod {
                 {".lng2.xml", true },
             };
 
+            public bool copyLuaPackFiles = true;//tex uses luaPackFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
             public bool copyModPackFolders = true;
             //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
@@ -289,7 +292,8 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("copying external modules folder to internal");
 
                 if (Directory.Exists(bs.modulesLuaPath)) {
-                    string destPath = bs.makebiteBuildPath + @"\Assets\tpp\script\ih";//DEBUGNOW dont like this
+                    //DEBUGNOW dont like this, need a more general external path to internal path system?
+                    string destPath = $"{bs.makebiteBuildPath}\\{bs.modulesInternalPath}";
                     Directory.CreateDirectory(destPath);
                     CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
                     //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
