@@ -51,7 +51,7 @@ namespace mgsv_buildmod {
 
             // TODO: just point to sperate file
             public string modVersionDefault = "rXXX";
-            public string modFileName = "Infinite Heaven";
+            public string modFileName = "Infinite Heaven";//tex .mgsv name
             public string readMeName = "Infinite Heaven Readme.txt";
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
@@ -81,6 +81,9 @@ namespace mgsv_buildmod {
             public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
 
             public bool makeMod = true; //tex run makebite on built mod
+            //tex (if installmod), uninstall previous mod, false will just install over top,
+            ///which may save some time, only issue may be if you removed some files in the new version
+            public bool uninstallExistingMod = true;
             public bool installMod = true;//tex install build mod, not run if release
             public bool installOtherMods = true;//tex install .mgsvs in otherMgsvsPath (done before actual mod), not run if release
 
@@ -379,6 +382,15 @@ namespace mgsv_buildmod {
                 if (bs.installOtherMods) {
                     ConsoleTitleAndWriteLine("running snakebite on othermods");
                     TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess);
+                }
+
+                if (bs.uninstallExistingMod) {
+                    ConsoleTitleAndWriteLine("uninstalling existing mod with snakebite");
+                    string snakeBiteArgs = "";
+                    snakeBiteArgs += " -u";//uninstall
+                    //snakeBiteArgs += " -s";//skip cleanup
+                    snakeBiteArgs += " -x";//exit
+                    UseTool(Properties.Settings.Default.snakeBitePath, bs.modFileName + snakeBiteArgs);
                 }
 
                 if (bs.installMod) {
