@@ -66,6 +66,7 @@ namespace mgsv_buildmod {
 
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
+            public bool compileModPackFiles = true; //tex overall switch of below
             public Dictionary<string, bool> fileTypesToCompile = new Dictionary<string, bool>() {
                 {".fox2.xml", true },
                 {".sdf.xml", true },
@@ -74,7 +75,7 @@ namespace mgsv_buildmod {
                 {".lba.xml", true },
                 {".lng2.xml", true },
             };
-
+            
             public bool copyLuaPackFiles = true;//tex uses luaPackFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
             public bool copyModPackFolders = true;//tex uses modPackPaths
             //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
@@ -172,38 +173,9 @@ namespace mgsv_buildmod {
                 CopyEngLng2sToOtherLangCodes(bs);
             }
 
-            //TODO: problem: subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
-            //TODO: add other fox2 types, and other tools, in IH cull the .xml files of those you haven't actually modified and use the original retail files
-            //TODO: even though I've just toolspaths to Properties.Settings, this is making me think of moving to toolspaths .json in exe dir
-            var fileTypesToCompileToolPaths = new Dictionary<string, string>() {
-                {".fox2.xml", Properties.Settings.Default.foxToolPath },
-                {".sdf.xml", Properties.Settings.Default.foxToolPath },
-                {".parts.xml", Properties.Settings.Default.foxToolPath },
-                {".tgt.xml", Properties.Settings.Default.foxToolPath },
-                {".lba.xml", Properties.Settings.Default.lbaToolPath },
-                {".lng2.xml", Properties.Settings.Default.langToolPath },
-            };
-
-            Console.WriteLine("Getting modPackPaths list");
-            var modPackFiles = bs.modPackPaths.SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
-
-            Console.WriteLine("Compiling modPackPaths files");
-            var taskWatch = new Stopwatch();
-            taskWatch.Start();
-            var tasks = new List<Task>();
-            foreach (var filePath in modPackFiles) {
-                foreach (var item in bs.fileTypesToCompile) {
-                    if (filePath.Contains(item.Key) && item.Value == true) {
-                        //Console.WriteLine($"filePath: {filePath}");//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
-                        //don't need to inform the user of progress of something thats only going to take a few seconds, moreso if doing so will double that time.
-                        tasks.Add(Task.Run(() => UseTool(fileTypesToCompileToolPaths[item.Key], filePath)));
-                        //UseTool(fileTypesToCompileToolPaths[item.Key], filePath);//DEBUGNOW
-                    }
-                }
-            }//foreach modPackPath
-            Task.WaitAll(tasks.ToArray());
-            taskWatch.Stop();
-            Console.WriteLine($"time to compile: {taskWatch.ElapsedMilliseconds}ms");
+            if (bs.compileModPackFiles) {
+                CompileModPackFiles(bs);
+            }
 
             if (bs.copyModPackFolders) {
                 Console.WriteLine();
@@ -278,6 +250,7 @@ namespace mgsv_buildmod {
                 File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
             }
 
+            //CULL
             if (bs.release == false && bs.cleanDat) {
                 ConsoleTitleAndWriteLine("cleandat");
                 Console.WriteLine("Deleting sbmods.xml");
@@ -358,6 +331,41 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void CompileModPackFiles(BuildModSettings bs) {
+            //TODO: problem: subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
+            //TODO: add other fox2 types, and other tools, in IH cull the .xml files of those you haven't actually modified and use the original retail files
+            //TODO: even though I've just toolspaths to Properties.Settings, this is making me think of moving to toolspaths .json in exe dir
+            var fileTypesToCompileToolPaths = new Dictionary<string, string>() {
+                    {".fox2.xml", Properties.Settings.Default.foxToolPath },
+                    {".sdf.xml", Properties.Settings.Default.foxToolPath },
+                    {".parts.xml", Properties.Settings.Default.foxToolPath },
+                    {".tgt.xml", Properties.Settings.Default.foxToolPath },
+                    {".lba.xml", Properties.Settings.Default.lbaToolPath },
+                    {".lng2.xml", Properties.Settings.Default.langToolPath },
+                };
+
+            Console.WriteLine("Getting modPackPaths list");
+            var modPackFiles = bs.modPackPaths.SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
+
+            Console.WriteLine("Compiling modPackPaths files");
+            var taskWatch = new Stopwatch();
+            taskWatch.Start();
+            var tasks = new List<Task>();
+            foreach (var filePath in modPackFiles) {
+                foreach (var item in bs.fileTypesToCompile) {
+                    if (filePath.Contains(item.Key) && item.Value == true) {
+                        //Console.WriteLine($"filePath: {filePath}");//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
+                        //don't need to inform the user of progress of something thats only going to take a few seconds, moreso if doing so will double that time.
+                        tasks.Add(Task.Run(() => UseTool(fileTypesToCompileToolPaths[item.Key], filePath)));
+                        //UseTool(fileTypesToCompileToolPaths[item.Key], filePath);//DEBUGNOW
+                    }
+                }
+            }//foreach modPackPath
+            Task.WaitAll(tasks.ToArray());
+            taskWatch.Stop();
+            Console.WriteLine($"time to compile: {taskWatch.ElapsedMilliseconds}ms");
+        }
 
         private static void CopyModulesToInternal(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("copying external modules folder to internal");
