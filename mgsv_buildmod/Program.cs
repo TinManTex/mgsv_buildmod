@@ -4,6 +4,10 @@
 //run without any args to generate a .json of BuildModSettings
 //pass in path to a BuildModSettings .json to use it
 
+//terms:
+//internal: files in dat
+//external: files in gamedir
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,7 +40,7 @@ namespace mgsv_buildmod {
 
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
-            public string internalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyInternalLua
+            public string externalAssetsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyExternalAssetsToInternal
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
 
@@ -70,9 +74,9 @@ namespace mgsv_buildmod {
             };
 
             public bool copyModPackFolders = true;
-            //tex copies internalLuaPath/core external lua to internal
+            //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
-            public bool copyInternalLua = false;
+            public bool copyExternalLuaToInternal = false;
 
             //tex copies externalLuaPath to makeBite/GameDir
             //WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release, since for non release I have symlinked game path/mod to externalLuaPath
@@ -253,22 +257,31 @@ namespace mgsv_buildmod {
                 }
             }
 
-            if (bs.copyInternalLua) {
+            if (bs.copyExternalLuaToInternal) {
                 Console.WriteLine();
 
-                ConsoleTitleAndWriteLine("copying core external folder to internal");
-
-                if (Directory.Exists(bs.internalLuaPath)) {
-                    string destPath = bs.makebiteBuildPath + @"\Assets";
-                    Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(bs.internalLuaPath), new DirectoryInfo(destPath), "", "");
-                    //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
-                    string buildExternalAssetsPath = bs.makebiteBuildPath + @"\GameDir\mod\Assets\";
-                    if (Directory.Exists(buildExternalAssetsPath)) {
-                        DeleteAndWait(buildExternalAssetsPath);
+                ConsoleTitleAndWriteLine("copying external folders to internal");
+                //tex just covering internal folders that have lua in tpp base game
+                string[] internalFolders = {
+                    "Assets",
+                    "Fox",
+                    "shaders",
+                    "Tpp"
+                };
+                foreach (var subPath in internalFolders) {
+                    var externalPath = $"{bs.externalLuaPath}\\{subPath}";
+                    if (Directory.Exists(externalPath)) {
+                        string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
+                        Directory.CreateDirectory(internalPath);
+                        CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
+                        //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
+                        string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
+                        if (Directory.Exists(buildExternalAssetsPath)) {
+                            DeleteAndWait(buildExternalAssetsPath);
+                        }
                     }
                 }
-            }
+            }//if copyExternalAssetsToInternal
 
             if (bs.copyModulesToInternal) {
                 Console.WriteLine();
