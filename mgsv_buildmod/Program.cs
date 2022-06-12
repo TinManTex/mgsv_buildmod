@@ -56,7 +56,7 @@ namespace mgsv_buildmod {
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
-            public bool cleanDat = false;
+            public bool cleanDat = false;//CULL, this was a hacky solution during the ancient times before skipConflictChecks and the great-snakebite-speedup
 
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
