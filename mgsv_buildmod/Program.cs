@@ -227,31 +227,9 @@ namespace mgsv_buildmod {
                     CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
-
+            Console.WriteLine();
             if (bs.copyExternalLuaToInternal) {
-                Console.WriteLine();
-
-                ConsoleTitleAndWriteLine("copying external folders to internal");
-                //tex just covering internal folders that have lua in tpp base game
-                string[] internalFolders = {
-                    "Assets",
-                    "Fox",
-                    "shaders",
-                    "Tpp"
-                };
-                foreach (var subPath in internalFolders) {
-                    var externalPath = $"{bs.externalLuaPath}\\{subPath}";
-                    if (Directory.Exists(externalPath)) {
-                        string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
-                        Directory.CreateDirectory(internalPath);
-                        CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
-                        //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
-                        string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
-                        if (Directory.Exists(buildExternalAssetsPath)) {
-                            DeleteAndWait(buildExternalAssetsPath);
-                        }
-                    }
-                }
+                CopyExternalLuaToInternal(bs);
             }//if copyExternalAssetsToInternal
 
             if (bs.copyModulesToInternal) {
@@ -394,6 +372,30 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void CopyExternalLuaToInternal(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copying external folders to internal");
+            //tex just covering internal folders that have lua in tpp base game
+            string[] internalFolders = {
+                    "Assets",
+                    "Fox",
+                    "shaders",
+                    "Tpp"
+                };
+            foreach (var subPath in internalFolders) {
+                var externalPath = $"{bs.externalLuaPath}\\{subPath}";
+                if (Directory.Exists(externalPath)) {
+                    string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
+                    Directory.CreateDirectory(internalPath);
+                    CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
+                    //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
+                    string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
+                    if (Directory.Exists(buildExternalAssetsPath)) {
+                        DeleteAndWait(buildExternalAssetsPath);
+                    }
+                }
+            }
+        }
 
         private static void CopyLuaPackFiles(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("CopyLuaPackFiles");
