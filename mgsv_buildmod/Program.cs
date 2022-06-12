@@ -150,12 +150,15 @@ namespace mgsv_buildmod {
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
 
             //CULL BuildIHHookRelease(bs.makeMod);
+
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
+
             ConsoleTitleAndWriteLine("Copy docs and exes");
             if (bs.copyDocsToBuild) {
                 CopyDocsToBuild(bs);
             }
+
             CopyIHExt(bs);
 
             string modVersion = bs.modVersionDefault;
@@ -308,7 +311,7 @@ namespace mgsv_buildmod {
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -u";//uninstall
                 //snakeBiteArgs += " -s";//skip cleanup
-                snakeBiteArgs += " -x";//exit
+                snakeBiteArgs += " -x";//exit when done
                 UseTool(Properties.Settings.Default.snakeBitePath, bs.modFileName + snakeBiteArgs);
             }
 
@@ -320,7 +323,7 @@ namespace mgsv_buildmod {
                 //snakeBiteArgs += " -c";//no conflict check
                 snakeBiteArgs += " -d";//reset hash
                 //snakeBiteArgs += " -s";//skip cleanup
-                snakeBiteArgs += " -x";//exit
+                snakeBiteArgs += " -x";//exit when done
                 UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
             }
 
