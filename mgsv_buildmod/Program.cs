@@ -165,7 +165,7 @@ namespace mgsv_buildmod {
             Console.WriteLine($"got modVersion:{modVersion}");
 
             if (bs.copyLuaPackFiles) {
-                CopyLuaPackFiles();
+                CopyLuaPackFiles(bs);
             }
 
             if (bs.copyEngLng2sToOtherLangCodes) {
