@@ -32,7 +32,7 @@ namespace mgsv_buildmod {
                 @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
-            public string otherMgsvsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when release: false, installOtherMods: true
+            public string otherMgsvsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when installOtherMods: true
 
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
@@ -46,7 +46,7 @@ namespace mgsv_buildmod {
             public string gamePath = @"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
-            public bool copyIHExt = false; //tex only run on release
+            public bool copyIHExt = false;
 
 
             // TODO: just point to sperate file
@@ -84,8 +84,8 @@ namespace mgsv_buildmod {
             //tex (if installmod), uninstall previous mod, false will just install over top,
             ///which may save some time, only issue may be if you removed some files in the new version
             public bool uninstallExistingMod = true;
-            public bool installMod = true;//tex install build mod, not run if release
-            public bool installOtherMods = true;//tex install .mgsvs in otherMgsvsPath (done before actual mod), not run if release
+            public bool installMod = true;//tex install build mod
+            public bool installOtherMods = true;//tex install .mgsvs in otherMgsvsPath (done before actual mod)
 
             public bool release = false;//DEBUGNOW dont forget to also set copyExternalLua true
 
@@ -148,9 +148,7 @@ namespace mgsv_buildmod {
             if (bs.copyDocsToBuild) {
                 CopyDocsToBuild(bs);
             }
-            if (bs.release) {
-                CopyIHExt(bs);
-            }
+            CopyIHExt(bs);
 
             string modVersion = bs.modVersionDefault;
 
@@ -377,33 +375,30 @@ namespace mgsv_buildmod {
                 }
             }
 
+            if (bs.installOtherMods) {
+                ConsoleTitleAndWriteLine("running snakebite on othermods");
+                TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess);
+            }
 
-            if (bs.release == false) {
-                if (bs.installOtherMods) {
-                    ConsoleTitleAndWriteLine("running snakebite on othermods");
-                    TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess);
-                }
+            if (bs.uninstallExistingMod) {
+                ConsoleTitleAndWriteLine("uninstalling existing mod with snakebite");
+                string snakeBiteArgs = "";
+                snakeBiteArgs += " -u";//uninstall
+                //snakeBiteArgs += " -s";//skip cleanup
+                snakeBiteArgs += " -x";//exit
+                UseTool(Properties.Settings.Default.snakeBitePath, bs.modFileName + snakeBiteArgs);
+            }
 
-                if (bs.uninstallExistingMod) {
-                    ConsoleTitleAndWriteLine("uninstalling existing mod with snakebite");
-                    string snakeBiteArgs = "";
-                    snakeBiteArgs += " -u";//uninstall
-                    //snakeBiteArgs += " -s";//skip cleanup
-                    snakeBiteArgs += " -x";//exit
-                    UseTool(Properties.Settings.Default.snakeBitePath, bs.modFileName + snakeBiteArgs);
-                }
-
-                if (bs.installMod) {
-                    ConsoleTitleAndWriteLine("running snakebite on mod");
-                    string snakeBiteMgsvPath = "\"" + snakeBiteMgvsFilePath + "\"";
-                    string snakeBiteArgs = "";
-                    snakeBiteArgs += " -i";//install
-                    //snakeBiteArgs += " -c";//no conflict check
-                    snakeBiteArgs += " -d";//reset hash
-                    //snakeBiteArgs += " -s";//skip cleanup
-                    snakeBiteArgs += " -x";//exit
-                    UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
-                }
+            if (bs.installMod) {
+                ConsoleTitleAndWriteLine("running snakebite on mod");
+                string snakeBiteMgsvPath = "\"" + snakeBiteMgvsFilePath + "\"";
+                string snakeBiteArgs = "";
+                snakeBiteArgs += " -i";//install
+                //snakeBiteArgs += " -c";//no conflict check
+                snakeBiteArgs += " -d";//reset hash
+                //snakeBiteArgs += " -s";//skip cleanup
+                snakeBiteArgs += " -x";//exit
+                UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
             }
 
             runWatch.Stop();
