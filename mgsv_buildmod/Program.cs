@@ -235,6 +235,7 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("copying modPackPaths folders");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
+                        Console.WriteLine(path);
                         CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", ".xml");
                     }
                 }
