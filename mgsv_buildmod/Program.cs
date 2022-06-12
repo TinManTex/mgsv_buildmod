@@ -76,7 +76,7 @@ namespace mgsv_buildmod {
             };
 
             public bool copyLuaPackFiles = true;//tex uses luaPackFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
-            public bool copyModPackFolders = true;
+            public bool copyModPackFolders = true;//tex uses modPackPaths
             //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
             public bool copyExternalLuaToInternal = false;
@@ -162,42 +162,10 @@ namespace mgsv_buildmod {
             string readmePathFull = bs.docsPath + "\\" + bs.readMeName;//DEBUGNOW
 
             modVersion = GetModVersion(modVersion, readmePathFull);
-            Console.WriteLine("got modVersion:{0}", modVersion);
+            Console.WriteLine($"got modVersion:{modVersion}");
 
-            ConsoleTitleAndWriteLine("generating buildInfo");
-            Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
-            //tex TODO restrict to Data1Lua,FpkCombineLua
-            TraverseTreeFileInfoList(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
-            //tex allow text files as subsituted //TODO wut
-            //TraverseTreeFileInfoList(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
-            if (modFilesInfo.Count == 0) {
-                //DEBUGNOW hmm
-                Console.WriteLine("no mod files found");
-                return;
-            }
-
-            Console.WriteLine();
-
-            ConsoleTitleAndWriteLine("copying mod files to build folder");
-            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
-                if (buildFileInfo.doBuild) {
-                    string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
-                    if (IsForFpk(buildFileInfo)) {
-                        string packPath = buildFileInfo.packPath.Replace(".", "_");
-                        string internalPath = buildFileInfo.fullPath.Substring(bs.luaPackFilesPath.Length);
-                        luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
-                    }
-                    Console.WriteLine(luaFileDestination);
-
-                    //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
-                    //having DOBUILD (example in externallua or mockfox)
-                    //I should just restrict buildfileinfo to data1,
-                    string dir = Path.GetDirectoryName(luaFileDestination);
-                    if (!Directory.Exists(dir)) {
-                        Directory.CreateDirectory(dir);
-                    }
-                    File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
-                }
+            if (bs.copyLuaPackFiles) {
+                CopyLuaPackFiles();
             }
 
             if (bs.copyEngLng2sToOtherLangCodes) {
@@ -426,6 +394,45 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void CopyLuaPackFiles(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("CopyLuaPackFiles");
+            ConsoleTitleAndWriteLine("generating buildInfo");
+            Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
+            //tex TODO restrict to Data1Lua,FpkCombineLua
+            TraverseTreeFileInfoList(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            //tex allow text files as subsituted //TODO wut
+            //TraverseTreeFileInfoList(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            if (modFilesInfo.Count == 0) {
+                //DEBUGNOW hmm
+                Console.WriteLine("no mod files found");
+                return;
+            }
+
+            Console.WriteLine();
+
+            ConsoleTitleAndWriteLine("copying mod files to build folder");
+            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
+                if (buildFileInfo.doBuild) {
+                    string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
+                    if (IsForFpk(buildFileInfo)) {
+                        string packPath = buildFileInfo.packPath.Replace(".", "_");
+                        string internalPath = buildFileInfo.fullPath.Substring(bs.luaPackFilesPath.Length);
+                        luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
+                    }
+                    Console.WriteLine(luaFileDestination);
+
+                    //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
+                    //having DOBUILD (example in externallua or mockfox)
+                    //I should just restrict buildfileinfo to data1,
+                    string dir = Path.GetDirectoryName(luaFileDestination);
+                    if (!Directory.Exists(dir)) {
+                        Directory.CreateDirectory(dir);
+                    }
+                    File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
+                }
+            }
+        }//CopyLuaPackFiles
 
         private static void CopyIHExt(BuildModSettings bs) {
             if (bs.copyIHExt) {
