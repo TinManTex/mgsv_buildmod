@@ -227,29 +227,15 @@ namespace mgsv_buildmod {
                     CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
-            Console.WriteLine();
+
             if (bs.copyExternalLuaToInternal) {
+                Console.WriteLine();
                 CopyExternalLuaToInternal(bs);
             }
 
             if (bs.copyModulesToInternal) {
                 Console.WriteLine();
-
-                ConsoleTitleAndWriteLine("copying external modules folder to internal");
-
-                if (Directory.Exists(bs.modulesLuaPath)) {
-                    //DEBUGNOW dont like this, need a more general external path to internal path system?
-                    string destPath = $"{bs.makebiteBuildPath}\\{bs.modulesInternalPath}";
-                    Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
-                    //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
-                    string modulesPath = bs.makebiteBuildPath + @"\GameDir\mod\modules";
-                    if (Directory.Exists(modulesPath)) {
-                        DeleteAndWait(modulesPath);
-                        Directory.CreateDirectory(modulesPath);
-                        File.CreateText(modulesPath + "/ih_files.txt").Close();
-                    }
-                }
+                CopyModulesToInternal(bs);
             }
 
             string snakeBiteMgvsDestFilePath = bs.buildFolder + "\\" + bs.modFileName + ".mgsv";
@@ -372,6 +358,23 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void CopyModulesToInternal(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copying external modules folder to internal");
+            if (Directory.Exists(bs.modulesLuaPath)) {
+                //DEBUGNOW dont like this, need a more general external path to internal path system?
+                string destPath = $"{bs.makebiteBuildPath}\\{bs.modulesInternalPath}";
+                Directory.CreateDirectory(destPath);
+                CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
+                //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
+                string modulesPath = bs.makebiteBuildPath + @"\GameDir\mod\modules";
+                if (Directory.Exists(modulesPath)) {
+                    DeleteAndWait(modulesPath);
+                    Directory.CreateDirectory(modulesPath);
+                    File.CreateText(modulesPath + "/ih_files.txt").Close();
+                }
+            }
+        }
 
         private static void CopyExternalLuaToInternal(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("copying external folders to internal");
