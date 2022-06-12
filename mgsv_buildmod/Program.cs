@@ -230,7 +230,7 @@ namespace mgsv_buildmod {
             Console.WriteLine();
             if (bs.copyExternalLuaToInternal) {
                 CopyExternalLuaToInternal(bs);
-            }//if copyExternalAssetsToInternal
+            }
 
             if (bs.copyModulesToInternal) {
                 Console.WriteLine();
