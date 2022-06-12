@@ -112,7 +112,7 @@ namespace mgsv_buildmod {
             var runWatch = new Stopwatch();
             runWatch.Start();
             Console.Title = titlePrefix;
-            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log
+            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log //TODO: actually doesnt capture exceptions, I guess I need to capture Console.Error too? 
 
             if (args.Length == 0) {
                 Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
@@ -141,7 +141,7 @@ namespace mgsv_buildmod {
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
 
-            BuildIHHookRelease(bs.makeMod);
+            //CULL BuildIHHookRelease(bs.makeMod);
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
             ConsoleTitleAndWriteLine("Copy docs and exes");
