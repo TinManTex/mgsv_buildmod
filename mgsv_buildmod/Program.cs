@@ -60,8 +60,6 @@ namespace mgsv_buildmod {
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
-            public bool cleanDat = false;//CULL, this was a hacky solution during the ancient times before skipConflictChecks and the great-snakebite-speedup
-
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
             public bool compileModPackFiles = true; //tex overall switch of below
@@ -144,8 +142,6 @@ namespace mgsv_buildmod {
 
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
-
-            //CULL BuildIHHookRelease(bs.makeMod);
 
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
@@ -248,35 +244,6 @@ namespace mgsv_buildmod {
             if (File.Exists(snakeBiteMetaDataFilePath)) {
                 File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
             }
-
-            //CULL
-            if (bs.release == false && bs.cleanDat) {
-                ConsoleTitleAndWriteLine("cleandat");
-                Console.WriteLine("Deleting sbmods.xml");
-                string sbmodFilePath = bs.gamePath + "\\snakebite.xml";
-                string sbmodCleanFilePath = bs.gamePath + "\\snakebiteclean.xml";
-                if (File.Exists(sbmodFilePath)) {
-                    File.Copy(sbmodCleanFilePath, sbmodFilePath, true);
-                }
-
-                string patchPath = $"{bs.gamePath}/master/0";
-                string sbclean00PathFull = patchPath + "\\" + "00.dat.sbclean";
-                string target00 = patchPath + "\\00.dat";
-
-                Console.WriteLine("restoring 00.dat");
-                if (File.Exists(sbclean00PathFull)) {
-                    File.Copy(sbclean00PathFull, target00, true);
-                }
-
-                string sbclean01PathFull = patchPath + "\\" + "01.dat.sbclean";
-                string target01 = patchPath + "\\01.dat";
-
-                Console.WriteLine("restoring 01.dat");
-                if (File.Exists(sbclean01PathFull)) {
-                    File.Copy(sbclean01PathFull, target01, true);
-                }
-            }
-
 
             if (bs.makeMod) {
                 ConsoleTitleAndWriteLine("makebite building " + snakeBiteMgvsFilePath);
@@ -538,51 +505,6 @@ namespace mgsv_buildmod {
                 }//foreach langCode
             }//foreach modPackPath
         }//CopyEngLng2sToOtherLangCodes
-
-        //CULL this should be handled by ihhook repo now that it's unbundled
-        private static void BuildIHHookRelease(bool makeMod) {
-            Console.WriteLine("making IHHook release");
-            string ihhookBuildFolder = @"C:\Projects\MGS\build\ihhook";
-            string ihh_makebiteSourcePath = @"D:\GitHub\IHHook\makebite";
-            string ihhMakebiteBuildPath = $"{ihhookBuildFolder}\\makebite\\";
-
-            ConsoleTitleAndWriteLine("deleting existing ihh makebite build folder");
-            DeleteAndWait(ihhMakebiteBuildPath);//tex GOTCHA will complain if open in explorer
-
-            Directory.CreateDirectory(ihhMakebiteBuildPath);
-
-            Console.WriteLine("copy IHHook makebite folder");
-            CopyFilesRecursively(new DirectoryInfo(ihh_makebiteSourcePath), new DirectoryInfo(ihhMakebiteBuildPath), "", "");
-
-            Console.WriteLine("copy IHHook dll");
-            string destPath = ihhMakebiteBuildPath + @"\GameDir\";
-
-            //tex copy readme so makebite builds it into metadata
-            string ihh_readmeSource = @"D:\GitHub\IHHook\makebite\GameDir\mod\docs\IHHook-Readme.txt";
-            string ihh_readmeDest = ihhMakebiteBuildPath + "\\Readme.txt";
-            File.Copy(ihh_readmeSource, ihh_readmeDest, true);
-
-            if (makeMod) {
-
-                string ihhookMakeBiteMgvsDestFilePath = ihhookBuildFolder + "\\" + "IHHook" + ".mgsv";
-                string ihhookMakeBiteMgvsFilePath = ihhMakebiteBuildPath + "\\" + "mod.mgsv";
-
-                ConsoleTitleAndWriteLine("makebite building " + ihhookMakeBiteMgvsFilePath);
-                string toolArgs = "";
-                toolArgs += ihhMakebiteBuildPath;
-                UseTool(Properties.Settings.Default.makeBitePath, toolArgs);
-
-                if (!File.Exists(ihhookMakeBiteMgvsFilePath)) {
-                    Console.WriteLine("Error! Cannot find " + ihhookMakeBiteMgvsFilePath);
-                    Console.ReadKey();
-                    return;
-                }
-                else {
-                    Console.WriteLine("Copying built msgv");
-                    File.Copy(ihhookMakeBiteMgvsFilePath, ihhookMakeBiteMgvsDestFilePath, true);
-                }
-            }
-        }//BuildIHHookRelease
 
         private static void ConsoleTitleAndWriteLine(string logLine) {
             Console.Title = titlePrefix + logLine;
