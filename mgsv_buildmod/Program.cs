@@ -36,8 +36,6 @@ namespace mgsv_buildmod {
                 @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
-            public string otherMgsvsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\othermods";//tex: folder of other mgsv files to install when installOtherMods: true
-
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
             public string externalAssetsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyExternalAssetsToInternal
@@ -57,7 +55,7 @@ namespace mgsv_buildmod {
 
             // TODO: just point to sperate file
             public string modVersionDefault = "rXXX";
-            public string modFileName = "Infinite Heaven";//tex .mgsv name
+            public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
             public string readMeName = "Infinite Heaven Readme.txt";
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
@@ -93,7 +91,6 @@ namespace mgsv_buildmod {
             ///which may save some time, only issue may be if you removed some files in the new version
             public bool uninstallExistingMod = true;
             public bool installMod = true;//tex install build mod
-            public bool installOtherMods = true;//tex install .mgsvs in otherMgsvsPath (done before actual mod)
 
             public bool release = false;//DEBUGNOW dont forget to also set copyExternalLua true
 
@@ -113,7 +110,6 @@ namespace mgsv_buildmod {
             return unfucked;
         }
 
-        public delegate void ProcessFileDelegate(string fileName);
         public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
         static void Main(string[] args) {
@@ -299,11 +295,6 @@ namespace mgsv_buildmod {
                     string lastBuildPath = bs.projectPath + "\\" + bs.modFileName + ".mgsv";
                     File.Copy(snakeBiteMgvsFilePath, lastBuildPath, true);
                 }
-            }
-
-            if (bs.installOtherMods) {
-                ConsoleTitleAndWriteLine("running snakebite on othermods");
-                TraverseTree(bs.otherMgsvsPath, ".mgsv", RunSnakeBiteProcess);
             }
 
             if (bs.uninstallExistingMod) {
@@ -624,67 +615,10 @@ namespace mgsv_buildmod {
             }
         }
 
-
-
         private static bool IsForFpk(BuildFileInfo buildFileInfo) {
             return buildFileInfo.packPath != "";
         }
 
-        public static void TraverseTree(string root, string extension, ProcessFileDelegate processFile) {
-            Stack<string> dirs = new Stack<string>(20);
-
-            if (!System.IO.Directory.Exists(root)) {
-                throw new ArgumentException();
-            }
-            dirs.Push(root);
-
-            while (dirs.Count > 0) {
-                string currentDir = dirs.Pop();
-                string[] subDirs;
-                try {
-                    subDirs = System.IO.Directory.GetDirectories(currentDir);
-                }
-                catch (UnauthorizedAccessException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-                catch (System.IO.DirectoryNotFoundException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-
-                string[] files = null;
-                try {
-                    files = System.IO.Directory.GetFiles(currentDir);
-                }
-                catch (UnauthorizedAccessException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-                catch (System.IO.DirectoryNotFoundException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-
-                foreach (string file in files) {
-                    try {
-
-                        System.IO.FileInfo fi = new System.IO.FileInfo(file);
-                        if (fi.Extension == extension) {
-                            processFile(fi.FullName);
-                        }
-                    }
-                    catch (System.IO.FileNotFoundException e) {
-                        Console.WriteLine(e.Message);
-                        continue;
-                    }
-                }
-
-                foreach (string str in subDirs)
-                    dirs.Push(str);
-            }
-        }//TraverseTree
-        //TODO: only difference between this and TraverseTree is extra param being passed into processFile delegate
         public static void TraverseTreeFileInfoList(string root, string extension, ProcessFileDelegateBuildFileInfoList processFile, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
             Stack<string> dirs = new Stack<string>(20);
 
@@ -814,22 +748,6 @@ namespace mgsv_buildmod {
                 }
             }
         }//ReadLuaBuildInfoProcess
-
-        public static void RunSnakeBiteProcess(string fileName) {
-            if (!fileName.Contains(".mgsv")) {
-                return;
-            }
-
-            string snakeBiteMgsvPath = "\"" + fileName + "\"";
-            string snakeBiteArgs = "";
-            snakeBiteArgs += " -i";//install
-            snakeBiteArgs += " -c";//no conflict check
-            snakeBiteArgs += " -d";//reset hash
-            snakeBiteArgs += " -s";//skip cleanup
-            snakeBiteArgs += " -x";//exit
-
-            UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
-        }
 
         private static void UseTool(string toolPath, string args) {
             //Console.WriteLine(toolPath);
