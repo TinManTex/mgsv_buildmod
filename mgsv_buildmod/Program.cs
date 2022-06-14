@@ -3,6 +3,7 @@
 //set tool paths via mgsv_buildmod.exe.config
 //run without any args to generate a .json of BuildModSettings
 //pass in path to a BuildModSettings .json to use it
+//see comments on BuildModSettings below
 
 //terms:
 //internal: files in dat
