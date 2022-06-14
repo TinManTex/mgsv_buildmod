@@ -23,6 +23,12 @@ using System.Threading.Tasks;
 namespace mgsv_buildmod {
     class Program {
         class BuildModSettings {
+            //tex smakebite metadata
+            public string Version = "";
+            public string Name = "";
+            public string Author = "";
+            public string Website = "";
+
             public string projectPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";//tex TODO: rethink, currently ony for copying last built mgsv 
 
             public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
@@ -36,6 +42,7 @@ namespace mgsv_buildmod {
                 @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
+            public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua, copyExternalLuaToInternal //TODO: point to GameDir/mod/ when you makbitify it
@@ -53,7 +60,6 @@ namespace mgsv_buildmod {
 
 
             // TODO: just point to sperate file
-            public string modVersionDefault = "rXXX";
             public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
             public string readMeName = "Infinite Heaven Readme.txt";
 
@@ -146,13 +152,6 @@ namespace mgsv_buildmod {
 
             CopyIHExt(bs);
 
-            string modVersion = bs.modVersionDefault;
-
-            string readmePathFull = bs.docsPath + "\\" + bs.readMeName;//DEBUGNOW
-
-            modVersion = GetModVersion(modVersion, readmePathFull);
-            Console.WriteLine($"got modVersion:{modVersion}");
-
             if (bs.copyLuaFpkdFiles) {
                 CopyLuaFpkdFiles(bs);
             }
@@ -199,34 +198,29 @@ namespace mgsv_buildmod {
                 CopyModulesToInternal(bs);
             }
 
-            string snakeBiteMgvsDestFilePath = bs.buildFolder + "\\" + bs.modFileName + ".mgsv";
-            string snakeBiteMgvsFilePath = bs.makebiteBuildPath + "\\" + "mod.mgsv";
-            //tex for if I change makebite from building inputfoldername\\mod.mgsv to build inputpathparent\inputfoldername.mgsv
-            //string snakeBiteMgvsDestFilePath = $"{bs.buildFolder}\\{bs.modFileName}.mgsv";
-            //string snakeBiteMgvsFilePath = $"{Directory.GetParent(bs.makebiteBuildPath)}\\makebite.mgsv";
+            string makeBiteMetaDataFilePath = $"{bs.metadataPath}\\metadata.xml";
+            string makeBiteMetaDataDestFilePath = $"{bs.makebiteBuildPath}\\metadata.xml";
 
-            snakeBiteMgvsFilePath = UnfungePath(snakeBiteMgvsFilePath);
-            string snakeBiteMetaDataFilePath = bs.buildFolder + "\\" + "metadata.xml";
-            string snakeBiteMetaDataDestFilePath = bs.makebiteBuildPath + "\\" + "metadata.xml";
             string snakeBiteReadMeFilePath = bs.docsPath + "\\" + bs.readMeName;
-            snakeBiteReadMeFilePath = UnfungePath(snakeBiteReadMeFilePath);
             string snakeBiteReadMeDestFilePath = bs.makebiteBuildPath + "\\" + "readme.txt";
-            snakeBiteReadMeDestFilePath = UnfungePath(snakeBiteReadMeDestFilePath);
 
 
 
             ConsoleTitleAndWriteLine("Updating metadata version tag");
-            if (File.Exists(snakeBiteMetaDataFilePath)) {
-                XDocument xmlFile = XDocument.Load(snakeBiteMetaDataFilePath);
+            if (File.Exists(makeBiteMetaDataFilePath)) {
+                XDocument xmlFile = XDocument.Load(makeBiteMetaDataFilePath);
 
                 var query = from c in xmlFile.Elements("ModEntry")
                             select c;
 
                 foreach (XElement entry in query) {
-                    entry.Attribute("Version").Value = modVersion;
+                    entry.Attribute("Version").Value = bs.Version;
+                    entry.Attribute("Name").Value = bs.Name;
+                    entry.Attribute("Author").Value = bs.Author;
+                    entry.Attribute("Website").Value = bs.Website;
                 }
 
-                xmlFile.Save(snakeBiteMetaDataFilePath);
+                xmlFile.Save(makeBiteMetaDataFilePath);
             }
 
             ConsoleTitleAndWriteLine("Copying mod readme");
@@ -235,26 +229,31 @@ namespace mgsv_buildmod {
             }
 
             ConsoleTitleAndWriteLine("Copying mod metadata");
-            if (File.Exists(snakeBiteMetaDataFilePath)) {
-                File.Copy(snakeBiteMetaDataFilePath, snakeBiteMetaDataDestFilePath, true);
+            if (File.Exists(makeBiteMetaDataFilePath)) {
+                File.Copy(makeBiteMetaDataFilePath, makeBiteMetaDataDestFilePath, true);
             }
 
-            if (bs.makeMod) {
-                ConsoleTitleAndWriteLine("makebite building " + snakeBiteMgvsFilePath);
+            if (bs.makeMod) {                    
+                string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
+                string makeBiteMgsvDestFilePath = $"{bs.buildFolder}\\{bs.modFileName}.mgsv";
+                
+                ConsoleTitleAndWriteLine("makebite building " + makebiteMgsvOutputFilePath);
                 string toolArgs = "";
                 toolArgs += bs.makebiteBuildPath;
                 UseTool(Properties.Settings.Default.makeBitePath, toolArgs);
 
-                if (!File.Exists(snakeBiteMgvsFilePath)) {
-                    Console.WriteLine("Error! Cannot find " + snakeBiteMgvsFilePath);
+                if (!File.Exists(makebiteMgsvOutputFilePath)) {
+                    Console.WriteLine("Error! Cannot find " + makebiteMgsvOutputFilePath);
                     Console.ReadKey();
                     return;
                 }
                 else {
                     Console.WriteLine("Copying built msgv");
-                    File.Copy(snakeBiteMgvsFilePath, snakeBiteMgvsDestFilePath, true);
+
+
+                    File.Copy(makebiteMgsvOutputFilePath, makeBiteMgsvDestFilePath, true);
                     string lastBuildPath = bs.projectPath + "\\" + bs.modFileName + ".mgsv";
-                    File.Copy(snakeBiteMgvsFilePath, lastBuildPath, true);
+                    File.Copy(makebiteMgsvOutputFilePath, lastBuildPath, true);
                 }
             }
 
@@ -269,7 +268,7 @@ namespace mgsv_buildmod {
 
             if (bs.installMod) {
                 ConsoleTitleAndWriteLine("running snakebite on mod");
-                string snakeBiteMgsvPath = "\"" + snakeBiteMgvsFilePath + "\"";
+                string snakeBiteMgsvPath = "\"" + makebiteMgsvOutputFilePath + "\"";
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -i";//install
                 //snakeBiteArgs += " -c";//no conflict check
@@ -505,23 +504,6 @@ namespace mgsv_buildmod {
             Console.Title = titlePrefix + logLine;
             Console.WriteLine(logLine);
         }//ConsoleTitleAndWriteLine
-
-        //tex get version from readme, superhax i know
-        private static string GetModVersion(string modVersion, string readmePathFull) {
-            if (File.Exists(readmePathFull)) {
-                string[] readmeLines = File.ReadAllLines(readmePathFull);
-                // ASSUMPTION: version on 2nd line, 1st chars
-                if (readmeLines.Length > 1) {
-                    char[] splitchar = { ' ' };
-                    string[] split = readmeLines[1].Split(splitchar);
-                    if (split.Length != 0) {
-                        modVersion = split[0];
-                    }
-                }
-            }
-
-            return modVersion;
-        }
 
         private static void DeleteAndWait(string path) {
             if (Directory.Exists(path)) {
