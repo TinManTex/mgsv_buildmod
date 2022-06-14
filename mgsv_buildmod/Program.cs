@@ -48,7 +48,7 @@ namespace mgsv_buildmod {
 
             public string gamePath = @"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
-            public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release\IHExt.exe";
+            public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release";
             public bool copyIHExt = false;
 
 
@@ -404,8 +404,9 @@ namespace mgsv_buildmod {
 
         private static void CopyIHExt(BuildModSettings bs) {
             if (bs.copyIHExt) {
-                if (!File.Exists(bs.ihExtPath)) {
-                    Console.WriteLine("WARNING: could not find ihExtPath " + bs.ihExtPath);
+                string ihExtFilePath = bs.ihExtPath + "\\IHExt.exe";
+                if (!File.Exists(ihExtFilePath)) {
+                    Console.WriteLine($"WARNING: could not find {ihExtFilePath}");
                 }
                 else {
                     Console.WriteLine("copying IHExt");
