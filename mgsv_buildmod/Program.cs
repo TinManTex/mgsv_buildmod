@@ -231,12 +231,12 @@ namespace mgsv_buildmod {
             ConsoleTitleAndWriteLine("Copying mod metadata");
             if (File.Exists(makeBiteMetaDataFilePath)) {
                 File.Copy(makeBiteMetaDataFilePath, makeBiteMetaDataDestFilePath, true);
-            }
+            }                
+            
+            string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
+            string makeBiteMgsvDestFilePath = $"{bs.buildFolder}\\{bs.modFileName}.mgsv";
 
-            if (bs.makeMod) {                    
-                string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
-                string makeBiteMgsvDestFilePath = $"{bs.buildFolder}\\{bs.modFileName}.mgsv";
-                
+            if (bs.makeMod) {                            
                 ConsoleTitleAndWriteLine("makebite building " + makebiteMgsvOutputFilePath);
                 string toolArgs = "";
                 toolArgs += bs.makebiteBuildPath;
