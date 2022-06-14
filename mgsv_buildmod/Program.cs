@@ -38,8 +38,7 @@ namespace mgsv_buildmod {
 
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
 
-            public string externalAssetsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\Assets";//tex for copyExternalAssetsToInternal
-            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua
+            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua, copyExternalLuaToInternal //TODO: point to GameDir/mod/ when you makbitify it
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
             public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
 
@@ -76,10 +75,12 @@ namespace mgsv_buildmod {
             public bool copyModPackFolders = true;//tex uses modPackPaths
             //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
+            //uses externalLuaPath
             public bool copyExternalLuaToInternal = false;
 
             //tex copies externalLuaPath to makeBite/GameDir
             //WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release, since for non release I have symlinked game path/mod to externalLuaPath
+            //uses externalLuaPath
             public bool copyExternalLua = false;
 
             public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
@@ -90,10 +91,7 @@ namespace mgsv_buildmod {
             public bool uninstallExistingMod = true;
             public bool installMod = true;//tex install build mod
 
-            public bool release = false;//DEBUGNOW dont forget to also set copyExternalLua true
-
-
-            public bool waitEnd = true;
+            public bool waitEnd = true;//tex leaves program window open when done, with press any key to exit
         }//BuildModSettings
 
         public class BuildFileInfo {
@@ -135,11 +133,6 @@ namespace mgsv_buildmod {
                 Console.WriteLine($"ERROR: BuildModSettings: Could not find gamePath {bs.gamePath}");
                 return;
             }
-
-            if (bs.release) {
-                Console.WriteLine("doing release build");
-            }
-
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
 
@@ -183,6 +176,7 @@ namespace mgsv_buildmod {
                 }
             }
 
+            //TODO: makebitify, then just add as a modPackPaths paths then CULL copyExternalLua
             if (bs.copyExternalLua) {
                 Console.WriteLine();
 
