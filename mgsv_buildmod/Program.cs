@@ -349,11 +349,11 @@ namespace mgsv_buildmod {
             ConsoleTitleAndWriteLine("copying external folders to internal");
             //tex just covering internal folders that have lua in tpp base game
             string[] internalFolders = {
-                    "Assets",
-                    "Fox",
-                    "shaders",
-                    "Tpp"
-                };
+                "Assets",
+                "Fox",
+                "shaders",
+                "Tpp"
+            };
             foreach (var subPath in internalFolders) {
                 var externalPath = $"{bs.externalLuaPath}\\{subPath}";
                 if (Directory.Exists(externalPath)) {
