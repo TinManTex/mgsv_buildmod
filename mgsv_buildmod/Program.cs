@@ -24,7 +24,7 @@ namespace mgsv_buildmod {
         class BuildModSettings {
             public string projectPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";//tex TODO: rethink, currently ony for copying last built mgsv 
 
-            public string luaPackFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaPackFiles 
+            public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaPackFiles 
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
@@ -71,7 +71,7 @@ namespace mgsv_buildmod {
                 {".lng2.xml", true },
             };
             
-            public bool copyLuaPackFiles = true;//tex uses luaPackFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
+            public bool copyLuaFpkdFiles = true;//tex uses luaPackFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
             public bool copyModPackFolders = true;//tex uses modPackPaths
             //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
@@ -159,8 +159,8 @@ namespace mgsv_buildmod {
             modVersion = GetModVersion(modVersion, readmePathFull);
             Console.WriteLine($"got modVersion:{modVersion}");
 
-            if (bs.copyLuaPackFiles) {
-                CopyLuaPackFiles(bs);
+            if (bs.copyLuaFpkdFiles) {
+                CopyLuaFpkdFiles(bs);
             }
 
             if (bs.copyEngLng2sToOtherLangCodes) {
@@ -368,12 +368,12 @@ namespace mgsv_buildmod {
             }
         }
 
-        private static void CopyLuaPackFiles(BuildModSettings bs) {
+        private static void CopyLuaFpkdFiles(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("CopyLuaPackFiles");
             ConsoleTitleAndWriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
-            TraverseTreeFileInfoList(bs.luaPackFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
+            TraverseTreeFileInfoList(bs.luaFpkdFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
             //tex allow text files as subsituted //TODO wut
             //TraverseTreeFileInfoList(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
             if (modFilesInfo.Count == 0) {
@@ -390,7 +390,7 @@ namespace mgsv_buildmod {
                     string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
                     if (IsForFpk(buildFileInfo)) {
                         string packPath = buildFileInfo.packPath.Replace(".", "_");
-                        string internalPath = buildFileInfo.fullPath.Substring(bs.luaPackFilesPath.Length);
+                        string internalPath = buildFileInfo.fullPath.Substring(bs.luaFpkdFilesPath.Length);
                         luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
                     }
                     Console.WriteLine(luaFileDestination);
