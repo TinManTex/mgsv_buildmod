@@ -76,8 +76,8 @@ namespace mgsv_buildmod {
             
             public bool copyLuaFpkdFiles = true;//tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
             public bool copyModPackFolders = true;//tex uses modPackPaths
-            //tex copies internalLuaPath/external lua to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
-            //WARNING: ih will still try to load external by default, so do not include internalLuaPath files in gamedir-mod\release)
+            //tex copies externalLuaPath to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
+            //WARNING: ih will still try to load external by default, so do not include externalLuaPath files in gamedir-mod\release)
             //uses externalLuaPath
             public bool copyExternalLuaToInternal = false;
 
@@ -261,7 +261,7 @@ namespace mgsv_buildmod {
             }
 
             if (bs.installMod) {
-                ConsoleTitleAndWriteLine("running snakebite on mod");
+                ConsoleTitleAndWriteLine("intalling mod with snakebite");
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -i";//install
                 //snakeBiteArgs += " -c";//no conflict check
