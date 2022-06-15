@@ -47,7 +47,7 @@ namespace mgsv_buildmod {
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
             public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
 
-            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua, copyExternalLuaToInternal //TODO: point to GameDir/mod/ when you makbitify it
+            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLuaToInternal //TODO: point to GameDir/mod/ when you makbitify it
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
             public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
 
@@ -80,11 +80,6 @@ namespace mgsv_buildmod {
             //WARNING: ih will still try to load external by default, so do not include externalLuaPath files in gamedir-mod\release)
             //uses externalLuaPath
             public bool copyExternalLuaToInternal = false;
-
-            //tex copies externalLuaPath to makeBite/GameDir
-            //WARNING: will overwrite MGS_TPP\mod if installMod true, so only should be for release, since for non release I have symlinked game path/mod to externalLuaPath
-            //uses externalLuaPath
-            public bool copyExternalLua = false;
 
             public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
 
@@ -169,19 +164,6 @@ namespace mgsv_buildmod {
                         Console.WriteLine(path);
                         CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", ".xml");
                     }
-                }
-            }
-
-            //TODO: makebitify, then just add as a modPackPaths paths then CULL copyExternalLua
-            if (bs.copyExternalLua) {
-                Console.WriteLine();
-
-                ConsoleTitleAndWriteLine("copying external folder to build");
-
-                if (Directory.Exists(bs.externalLuaPath)) {
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
-                    Directory.CreateDirectory(destPath);
-                    CopyFilesRecursively(new DirectoryInfo(bs.externalLuaPath), new DirectoryInfo(destPath), "", "");
                 }
             }
 
@@ -322,7 +304,6 @@ namespace mgsv_buildmod {
                 string destPath = $"{bs.makebiteBuildPath}\\{bs.modulesInternalPath}";
                 Directory.CreateDirectory(destPath);
                 CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
-                //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
                 string modulesPath = bs.makebiteBuildPath + @"\GameDir\mod\modules";
                 if (Directory.Exists(modulesPath)) {
                     DeleteAndWait(modulesPath);
@@ -347,7 +328,7 @@ namespace mgsv_buildmod {
                     string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
                     Directory.CreateDirectory(internalPath);
                     CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
-                    //DEBUGNOW also don't like this, modules will have been blindly copied via copyExternalLua, so kill them
+                    //DEBUGNOW also don't like this, modules will have been blindly copied via modPackPaths, so kill them
                     string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
                     if (Directory.Exists(buildExternalAssetsPath)) {
                         DeleteAndWait(buildExternalAssetsPath);
