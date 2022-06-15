@@ -59,9 +59,8 @@ namespace mgsv_buildmod {
             public bool copyIHExt = false;
 
 
-            // TODO: just point to sperate file
             public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
-            public string readMeName = "Infinite Heaven Readme.txt";
+            public string readMeName = "Readme.txt";
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
@@ -201,11 +200,6 @@ namespace mgsv_buildmod {
             string makeBiteMetaDataFilePath = $"{bs.metadataPath}\\metadata.xml";
             string makeBiteMetaDataDestFilePath = $"{bs.makebiteBuildPath}\\metadata.xml";
 
-            string snakeBiteReadMeFilePath = bs.docsPath + "\\" + bs.readMeName;
-            string snakeBiteReadMeDestFilePath = bs.makebiteBuildPath + "\\" + "readme.txt";
-
-
-
             ConsoleTitleAndWriteLine("Updating metadata version tag");
             if (File.Exists(makeBiteMetaDataFilePath)) {
                 XDocument xmlFile = XDocument.Load(makeBiteMetaDataFilePath);
@@ -222,8 +216,10 @@ namespace mgsv_buildmod {
 
                 xmlFile.Save(makeBiteMetaDataFilePath);
             }
-
-            ConsoleTitleAndWriteLine("Copying mod readme");
+            //tex alternative would be to read the file and push it into the metadata description tag above
+            ConsoleTitleAndWriteLine("Copying mod readme");                
+            string snakeBiteReadMeFilePath = $"{bs.docsPath}\\{bs.readMeName}";
+            string snakeBiteReadMeDestFilePath = $"{bs.makebiteBuildPath}\\readme.txt";
             if (File.Exists(snakeBiteReadMeFilePath)) {
                 File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
             }
@@ -268,14 +264,13 @@ namespace mgsv_buildmod {
 
             if (bs.installMod) {
                 ConsoleTitleAndWriteLine("running snakebite on mod");
-                string snakeBiteMgsvPath = "\"" + makebiteMgsvOutputFilePath + "\"";
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -i";//install
                 //snakeBiteArgs += " -c";//no conflict check
                 snakeBiteArgs += " -d";//reset hash
                 //snakeBiteArgs += " -s";//skip cleanup
                 snakeBiteArgs += " -x";//exit when done
-                UseTool(Properties.Settings.Default.snakeBitePath, snakeBiteMgsvPath + snakeBiteArgs);
+                UseTool(Properties.Settings.Default.snakeBitePath, makebiteMgsvOutputFilePath + snakeBiteArgs);
             }
 
             runWatch.Stop();
