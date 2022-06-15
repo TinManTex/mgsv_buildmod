@@ -60,7 +60,7 @@ namespace mgsv_buildmod {
 
 
             public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
-            public string readMeName = "Readme.txt";
+            public string readMeFileName = "Readme.txt";
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
@@ -218,7 +218,7 @@ namespace mgsv_buildmod {
             }
             //tex alternative would be to read the file and push it into the metadata description tag above
             ConsoleTitleAndWriteLine("Copying mod readme");                
-            string snakeBiteReadMeFilePath = $"{bs.docsPath}\\{bs.readMeName}";
+            string snakeBiteReadMeFilePath = $"{bs.docsPath}\\{bs.readMeFileName}";
             string snakeBiteReadMeDestFilePath = $"{bs.makebiteBuildPath}\\readme.txt";
             if (File.Exists(snakeBiteReadMeFilePath)) {
                 File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
