@@ -64,6 +64,7 @@ namespace mgsv_buildmod {
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
             public bool compileModPackFiles = true; //tex overall switch of below
+            //SYNC: CompileModPackFiles
             public Dictionary<string, bool> fileTypesToCompile = new Dictionary<string, bool>() {
                 {".fox2.xml", true },
                 {".sdf.xml", true },
@@ -282,6 +283,7 @@ namespace mgsv_buildmod {
             //TODO: problem: subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
             //TODO: add other fox2 types, and other tools, in IH cull the .xml files of those you haven't actually modified and use the original retail files
             //TODO: even though I've just toolspaths to Properties.Settings, this is making me think of moving to toolspaths .json in exe dir
+            //SYNC: bs.fileTypesToCompile
             var fileTypesToCompileToolPaths = new Dictionary<string, string>() {
                     {".fox2.xml", Properties.Settings.Default.foxToolPath },
                     {".sdf.xml", Properties.Settings.Default.foxToolPath },
