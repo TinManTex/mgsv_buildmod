@@ -42,25 +42,22 @@ namespace mgsv_buildmod {
                 @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
-            public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
+            public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
+            public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
+            public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLua, copyExternalLuaToInternal //TODO: point to GameDir/mod/ when you makbitify it
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
             public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
 
-
-            public string buildFolder = @"C:\Projects\MGS\build\infiniteheaven"; //tex: where the various files are actually pulled together before being makebitten      
-            public string makebiteBuildPath = @"C:\Projects\MGS\build\infiniteheaven\makebite";
+            public string makebiteBuildPath = @"C:\Projects\MGS\build\infiniteheaven\makebite"; //tex: where the various files are actually pulled together before being makebitten
+            public string buildPath = @"C:\Projects\MGS\build\infiniteheaven\build";//tex where the built .mgsv and docs folder are placed ready for being zipped for release //TODO: zip it too
 
             public string gamePath = @"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
             public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release";
             public bool copyIHExt = false;
-
-
-            public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
-            public string readMeFileName = "Readme.txt";
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
@@ -230,7 +227,7 @@ namespace mgsv_buildmod {
             }                
             
             string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
-            string makeBiteMgsvDestFilePath = $"{bs.buildFolder}\\{bs.modFileName}.mgsv";
+            string makeBiteMgsvDestFilePath = $"{bs.buildPath}\\{bs.modFileName}.mgsv";
 
             if (bs.makeMod) {                            
                 ConsoleTitleAndWriteLine("makebite building " + makebiteMgsvOutputFilePath);
@@ -417,7 +414,7 @@ namespace mgsv_buildmod {
             if (Directory.Exists(bs.docsPath)) {
                 Console.Title = titlePrefix + "Copy docs";
                 Console.WriteLine("copying docs files to build folder");
-                string docsDestinationPath = bs.buildFolder + @"\docs";
+                string docsDestinationPath = bs.buildPath + @"\docs";
                 if (Directory.Exists(docsDestinationPath)) {
                     DeleteAndWait(docsDestinationPath);
                 }
