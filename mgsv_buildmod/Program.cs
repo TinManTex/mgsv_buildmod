@@ -29,8 +29,6 @@ namespace mgsv_buildmod {
             public string Author = "";
             public string Website = "";
 
-            public string projectPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";//tex TODO: rethink, currently ony for copying last built mgsv 
-
             public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
@@ -231,11 +229,7 @@ namespace mgsv_buildmod {
                 }
                 else {
                     Console.WriteLine("Copying built msgv");
-
-
                     File.Copy(makebiteMgsvOutputFilePath, makeBiteMgsvDestFilePath, true);
-                    string lastBuildPath = bs.projectPath + "\\" + bs.modFileName + ".mgsv";
-                    File.Copy(makebiteMgsvOutputFilePath, lastBuildPath, true);
                 }
             }
 
