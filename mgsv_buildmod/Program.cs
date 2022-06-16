@@ -60,11 +60,23 @@ namespace mgsv_buildmod {
             public bool compileModPackFiles = true; //tex overall switch of below
             //SYNC: CompileModPackFiles
             public Dictionary<string, bool> fileTypesToCompile = new Dictionary<string, bool>() {
+                {".bnd.xml", true },
+                {".clo.xml", true },
+                {".des.xml", true },
+                {".evf.xml", true },
                 {".fox2.xml", true },
-                {".sdf.xml", true },
+                {".fsd.xml", true },
+                {".lad.xml", true },
                 {".parts.xml", true },
+                {".ph.xml", true },
+                {".phsd.xml", true },
+                {".sdf.xml", true },
+                {".sim.xml", true },
                 {".tgt.xml", true },
+                {".veh.xml", true },
+
                 {".lba.xml", true },
+                {".lng.xml", true },
                 {".lng2.xml", true },
             };
             
@@ -261,13 +273,25 @@ namespace mgsv_buildmod {
             //TODO: even though I've just toolspaths to Properties.Settings, this is making me think of moving to toolspaths .json in exe dir
             //SYNC: bs.fileTypesToCompile
             var fileTypesToCompileToolPaths = new Dictionary<string, string>() {
-                    {".fox2.xml", Properties.Settings.Default.foxToolPath },
-                    {".sdf.xml", Properties.Settings.Default.foxToolPath },
-                    {".parts.xml", Properties.Settings.Default.foxToolPath },
-                    {".tgt.xml", Properties.Settings.Default.foxToolPath },
-                    {".lba.xml", Properties.Settings.Default.lbaToolPath },
-                    {".lng2.xml", Properties.Settings.Default.langToolPath },
-                };
+                {".bnd.xml", Properties.Settings.Default.foxToolPath },
+                {".clo.xml", Properties.Settings.Default.foxToolPath },
+                {".des.xml", Properties.Settings.Default.foxToolPath },
+                {".evf.xml", Properties.Settings.Default.foxToolPath },
+                {".fox2.xml", Properties.Settings.Default.foxToolPath },
+                {".fsd.xml", Properties.Settings.Default.foxToolPath },
+                {".lad.xml", Properties.Settings.Default.foxToolPath },
+                {".parts.xml", Properties.Settings.Default.foxToolPath },
+                {".ph.xml", Properties.Settings.Default.foxToolPath },
+                {".phsd.xml", Properties.Settings.Default.foxToolPath },
+                {".sdf.xml", Properties.Settings.Default.foxToolPath },
+                {".sim.xml", Properties.Settings.Default.foxToolPath },
+                {".tgt.xml", Properties.Settings.Default.foxToolPath },
+                {".veh.xml", Properties.Settings.Default.foxToolPath },
+
+                {".lba.xml", Properties.Settings.Default.lbaToolPath },
+                {".lng.xml", Properties.Settings.Default.langToolPath },
+                {".lng2.xml", Properties.Settings.Default.langToolPath },
+            };
 
             Console.WriteLine("Getting modPackPaths list");
             var modPackFiles = bs.modPackPaths.SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
