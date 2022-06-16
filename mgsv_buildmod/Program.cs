@@ -79,10 +79,12 @@ namespace mgsv_buildmod {
 
             public bool makeMod = true; //tex run makebite on built mod
             //tex (if installmod), uninstall previous mod, false will just install over top,
-            ///which may save some time, only issue may be if you removed some files in the new version
+            //which may save some time, only issue may be if you removed some files in the new version
+            //GOTCHA: uninstall only uninstalls 1st entry of Name found (multiple mods of same name may be installed, see GOTCHA below)
             public bool uninstallExistingMod = true;
             public bool installMod = true;//tex install build mod
-
+            //GOTCHA: snakebite will actually add new mod entry for every install, installing with the same mod Name does not overwrite that entry (even though it overwrites files)
+            //TODO: snakebite: possibly an overwritemodofsamename option
             public bool waitEnd = true;//tex leaves program window open when done, with press any key to exit
         }//BuildModSettings
 
