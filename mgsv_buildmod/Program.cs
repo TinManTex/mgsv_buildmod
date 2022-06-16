@@ -42,7 +42,7 @@ namespace mgsv_buildmod {
                 @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
             };
 
-            public string modFileName = "Infinite Heaven";//tex .mgsv name, snakebite mod Name
+            public string modFileName = "Infinite Heaven";//tex .mgsv name
             public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
             public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
             public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
