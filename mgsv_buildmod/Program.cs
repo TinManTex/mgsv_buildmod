@@ -36,11 +36,8 @@ namespace mgsv_buildmod {
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
             ///so need to be in makebiteable layout
-            public List<string> modPackPaths = new List<string> {
-                @"C:\Projects\MGS\InfiniteHeaven\tpp-release\ih-data1_dat-lua",
-                @"C:\Projects\MGS\InfiniteHeaven\tpp-release\fpk-mod",
-                @"C:\Projects\MGS\InfiniteHeaven\tpp\fpk-mod-ih",
-            };
+            //GOTCHA: don't fill this out with example because json entries are added rather than replace
+            public List<string> modPackPaths = new List<string> { };
 
             public string modFileName = "Infinite Heaven";//tex .mgsv name
             public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
