@@ -56,9 +56,6 @@ namespace mgsv_buildmod {
 
             public string gamePath = @"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
-            public string ihExtPath = @"D:\GitHub\IHExt\IHExt\bin\Release";
-            public bool copyIHExt = false;
-
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
@@ -141,8 +138,6 @@ namespace mgsv_buildmod {
             if (bs.copyDocsToBuild) {
                 CopyDocsToBuild(bs);
             }
-
-            CopyIHExt(bs);
 
             if (bs.copyLuaFpkdFiles) {
                 CopyLuaFpkdFiles(bs);
@@ -375,23 +370,6 @@ namespace mgsv_buildmod {
                 }
             }
         }//CopyLuaPackFiles
-
-        private static void CopyIHExt(BuildModSettings bs) {
-            if (bs.copyIHExt) {
-                string ihExtFilePath = bs.ihExtPath + "\\IHExt.exe";
-                if (!File.Exists(ihExtFilePath)) {
-                    Console.WriteLine($"WARNING: could not find {ihExtFilePath}");
-                }
-                else {
-                    Console.WriteLine("copying IHExt");
-                    string destPath = bs.makebiteBuildPath + @"\GameDir\mod\";
-                    if (!Directory.Exists(destPath)) {
-                        Directory.CreateDirectory(destPath);
-                    }
-                    File.Copy(bs.ihExtPath, destPath + "IHExt.exe");
-                }
-            }
-        }//CopyIHExt
 
         private static void CopyDocsToBuild(BuildModSettings bs) {
             if (Directory.Exists(bs.docsPath)) {
