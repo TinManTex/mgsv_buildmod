@@ -234,7 +234,7 @@ namespace mgsv_buildmod {
                 snakeBiteArgs += " -u";//uninstall
                 //snakeBiteArgs += " -s";//skip cleanup
                 snakeBiteArgs += " -x";//exit when done
-                UseTool(Properties.Settings.Default.snakeBitePath, bs.modFileName + snakeBiteArgs);
+                UseTool(Properties.Settings.Default.snakeBitePath, bs.Name + snakeBiteArgs);
             }
 
             if (bs.installMod) {
