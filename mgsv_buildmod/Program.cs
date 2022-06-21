@@ -246,8 +246,8 @@ namespace mgsv_buildmod {
                 ConsoleTitleAndWriteLine("intalling mod with snakebite");
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -i";//install
-                //snakeBiteArgs += " -c";//no conflict check
-                snakeBiteArgs += " -d";//reset hash
+                snakeBiteArgs += " -c";//no conflict check
+                //snakeBiteArgs += " -d";//reset hash
                 //snakeBiteArgs += " -s";//skip cleanup
                 snakeBiteArgs += " -x";//exit when done
                 UseTool(Properties.Settings.Default.snakeBitePath, makebiteMgsvOutputFilePath + snakeBiteArgs);
