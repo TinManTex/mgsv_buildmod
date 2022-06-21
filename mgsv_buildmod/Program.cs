@@ -115,6 +115,10 @@ namespace mgsv_buildmod {
         static void Main(string[] args) {
             var runWatch = new Stopwatch();
             runWatch.Start();
+
+            var stepWatch = new Stopwatch();
+            //stepWatch.Start();
+
             Console.Title = titlePrefix;
             var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log //TODO: actually doesnt capture exceptions, I guess I need to capture Console.Error too? 
 
@@ -216,7 +220,8 @@ namespace mgsv_buildmod {
             string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
             string makeBiteMgsvDestFilePath = $"{bs.buildPath}\\{bs.modFileName}.mgsv";
 
-            if (bs.makeMod) {                            
+            if (bs.makeMod) {
+                stepWatch.Restart();
                 ConsoleTitleAndWriteLine("makebite building " + makebiteMgsvOutputFilePath);
                 string toolArgs = "";
                 toolArgs += bs.makebiteBuildPath;
@@ -231,19 +236,25 @@ namespace mgsv_buildmod {
                     Console.WriteLine("Copying built msgv");
                     File.Copy(makebiteMgsvOutputFilePath, makeBiteMgsvDestFilePath, true);
                 }
+                stepWatch.Stop();
+                Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
             }
 
             if (bs.uninstallExistingMod) {
+                stepWatch.Restart();
                 ConsoleTitleAndWriteLine("uninstalling existing mod with snakebite");
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -u";//uninstall
                 //snakeBiteArgs += " -s";//skip cleanup
                 snakeBiteArgs += " -x";//exit when done
                 UseTool(Properties.Settings.Default.snakeBitePath, bs.Name + snakeBiteArgs);
+                stepWatch.Stop();
+                Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
             }
 
             if (bs.installMod) {
-                ConsoleTitleAndWriteLine("intalling mod with snakebite");
+                stepWatch.Restart();
+                ConsoleTitleAndWriteLine("installing mod with snakebite");
                 string snakeBiteArgs = "";
                 snakeBiteArgs += " -i";//install
                 snakeBiteArgs += " -c";//no conflict check
@@ -251,6 +262,8 @@ namespace mgsv_buildmod {
                 //snakeBiteArgs += " -s";//skip cleanup
                 snakeBiteArgs += " -x";//exit when done
                 UseTool(Properties.Settings.Default.snakeBitePath, makebiteMgsvOutputFilePath + snakeBiteArgs);
+                stepWatch.Stop();
+                Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
             }
 
             runWatch.Stop();
