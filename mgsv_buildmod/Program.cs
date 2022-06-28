@@ -691,11 +691,20 @@ namespace mgsv_buildmod {
                     try {
                         Directory.Delete(dir);
                     }
-                    catch (UnauthorizedAccessException) { }
-                    catch (DirectoryNotFoundException) { }
+                    catch (UnauthorizedAccessException e) {
+                        Console.WriteLine($"DeleteEmptyDirs({dir})"); 
+                        Console.WriteLine(e.Message);
+                    }
+                    catch (DirectoryNotFoundException e) {
+                        Console.WriteLine($"DeleteEmptyDirs({dir})");
+                        Console.WriteLine(e.Message);
+                    }
                 }
             }
-            catch (UnauthorizedAccessException) { }
+            catch (UnauthorizedAccessException e) {
+                Console.WriteLine($"DeleteEmptyDirs({dir})");
+                Console.WriteLine(e.Message);
+            }
         }//DeleteEmptyDirs
     }//class Program
 }//namespace mgsv_buildmod
