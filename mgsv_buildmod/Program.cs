@@ -120,7 +120,7 @@ namespace mgsv_buildmod {
             //stepWatch.Start();
 
             Console.Title = titlePrefix;
-            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log //TODO: actually doesnt capture exceptions, I guess I need to capture Console.Error too? 
+            var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log //TODO: actually doesnt capture external process exceptions? I guess I need to capture Console.Error too? 
 
             if (args.Length == 0) {
                 Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
