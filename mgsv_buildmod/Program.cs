@@ -185,38 +185,8 @@ namespace mgsv_buildmod {
                 CopyModulesToInternal(bs);
             }
 
-            string makeBiteMetaDataFilePath = $"{bs.metadataPath}\\metadata.xml";
-            string makeBiteMetaDataDestFilePath = $"{bs.makebiteBuildPath}\\metadata.xml";
+            UpdateMetadata(bs);
 
-            ConsoleTitleAndWriteLine("Updating metadata version tag");
-            if (File.Exists(makeBiteMetaDataFilePath)) {
-                XDocument xmlFile = XDocument.Load(makeBiteMetaDataFilePath);
-
-                var query = from c in xmlFile.Elements("ModEntry")
-                            select c;
-
-                foreach (XElement entry in query) {
-                    entry.Attribute("Version").Value = bs.Version;
-                    entry.Attribute("Name").Value = bs.Name;
-                    entry.Attribute("Author").Value = bs.Author;
-                    entry.Attribute("Website").Value = bs.Website;
-                }
-
-                xmlFile.Save(makeBiteMetaDataFilePath);
-            }
-            //tex alternative would be to read the file and push it into the metadata description tag above
-            ConsoleTitleAndWriteLine("Copying mod readme");                
-            string snakeBiteReadMeFilePath = $"{bs.docsPath}\\{bs.readMeFileName}";
-            string snakeBiteReadMeDestFilePath = $"{bs.makebiteBuildPath}\\readme.txt";
-            if (File.Exists(snakeBiteReadMeFilePath)) {
-                File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
-            }
-
-            ConsoleTitleAndWriteLine("Copying mod metadata");
-            if (File.Exists(makeBiteMetaDataFilePath)) {
-                File.Copy(makeBiteMetaDataFilePath, makeBiteMetaDataDestFilePath, true);
-            }                
-            
             string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
             string makeBiteMgsvDestFilePath = $"{bs.buildPath}\\{bs.modFileName}.mgsv";
 
@@ -273,6 +243,40 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void UpdateMetadata(BuildModSettings bs) {
+            string makeBiteMetaDataFilePath = $"{bs.metadataPath}\\metadata.xml";
+            string makeBiteMetaDataDestFilePath = $"{bs.makebiteBuildPath}\\metadata.xml";
+
+            ConsoleTitleAndWriteLine("Updating metadata version tag");
+            if (File.Exists(makeBiteMetaDataFilePath)) {
+                XDocument xmlFile = XDocument.Load(makeBiteMetaDataFilePath);
+
+                var query = from c in xmlFile.Elements("ModEntry")
+                            select c;
+
+                foreach (XElement entry in query) {
+                    entry.Attribute("Version").Value = bs.Version;
+                    entry.Attribute("Name").Value = bs.Name;
+                    entry.Attribute("Author").Value = bs.Author;
+                    entry.Attribute("Website").Value = bs.Website;
+                }
+
+                xmlFile.Save(makeBiteMetaDataFilePath);
+            }
+            //tex alternative would be to read the file and push it into the metadata description tag above
+            ConsoleTitleAndWriteLine("Copying mod readme");
+            string snakeBiteReadMeFilePath = $"{bs.docsPath}\\{bs.readMeFileName}";
+            string snakeBiteReadMeDestFilePath = $"{bs.makebiteBuildPath}\\readme.txt";
+            if (File.Exists(snakeBiteReadMeFilePath)) {
+                File.Copy(snakeBiteReadMeFilePath, snakeBiteReadMeDestFilePath, true);
+            }
+
+            ConsoleTitleAndWriteLine("Copying mod metadata");
+            if (File.Exists(makeBiteMetaDataFilePath)) {
+                File.Copy(makeBiteMetaDataFilePath, makeBiteMetaDataDestFilePath, true);
+            }
+        }//UpdateMetadata
 
         private static void CompileModPackFiles(BuildModSettings bs) {
             //TODO: problem: subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
