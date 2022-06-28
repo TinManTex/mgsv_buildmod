@@ -39,11 +39,11 @@ namespace mgsv_buildmod {
 
             public string modFileName = "Infinite Heaven";//tex .mgsv name
             public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
-            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\docs";
+            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\docs";
             public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
 
-            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir";//tex for copyExternalLuaToInternal //TODO: point to GameDir/mod/ when you makbitify it
-            public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\mod-gamedir\modules";//tex for copyModulesToInternal
+            public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
+            public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\modules";//tex for copyModulesToInternal
             public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
 
             public string makebiteBuildPath = @"C:\Projects\MGS\build\infiniteheaven\makebite"; //tex: where the various files are actually pulled together before being makebitten
