@@ -39,7 +39,7 @@ namespace mgsv_buildmod {
 
             public string modFileName = "Infinite Heaven";//tex .mgsv name
             public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
-            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\docs";
+            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\docs\Infinite Heaven";
             public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
@@ -217,7 +217,7 @@ namespace mgsv_buildmod {
                 snakeBiteArgs += " -u";//uninstall
                 //snakeBiteArgs += " -s";//skip cleanup
                 snakeBiteArgs += " -x";//exit when done
-                UseTool(Properties.Settings.Default.snakeBitePath, bs.Name + snakeBiteArgs);
+                UseTool(Properties.Settings.Default.snakeBitePath, "\"" + bs.Name + "\"" + snakeBiteArgs);
                 stepWatch.Stop();
                 Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
             }
@@ -367,7 +367,7 @@ namespace mgsv_buildmod {
         }
 
         private static void CopyLuaFpkdFiles(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("CopyLuaPackFiles");
+            ConsoleTitleAndWriteLine("CopyLuaFpkdFiles");
             ConsoleTitleAndWriteLine("generating buildInfo");
             Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
             //tex TODO restrict to Data1Lua,FpkCombineLua
@@ -403,7 +403,7 @@ namespace mgsv_buildmod {
                     File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
                 }
             }
-        }//CopyLuaPackFiles
+        }//CopyLuaFpkdFiles
 
         private static void CopyDocsToBuild(BuildModSettings bs) {
             if (Directory.Exists(bs.docsPath)) {
