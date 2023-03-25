@@ -8,3 +8,5 @@ Set tool paths via mgsv_buildmod.exe.config
 Run without any args to generate a .json of BuildModSettings
 Pass in path to a BuildModSettings .json to use it
 See comments on the BuildModSettings in Program.cs
+
+In the case of Infinite Heaven the build settings can be found in tpp/build-infinite_heaven*.json
