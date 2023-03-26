@@ -50,11 +50,11 @@ namespace mgsv_buildmod {
             public string makebiteBuildPath = @"C:\Projects\MGS\build\infiniteheaven\makebite"; //tex: where the various files are actually pulled together before being makebitten
             public string buildPath = @"C:\Projects\MGS\build\infiniteheaven\build";//tex where the built .mgsv and docs folder are placed ready for being zipped for release //TODO: zip it too
 
-            public string gamePath = @"C:\Games\Steam\SteamApps\common\MGS_TPP";
+            public string gamePath = null;//@"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
             public bool copyDocsToBuild = true;//tex copies docsPath to build, so they can be included in release zip for user to check out without installing or unzipping .mgsv
 
-            public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
+            public bool copyEngLng2sToOtherLangCodes = false;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
             public bool compileMakebiteBuildFiles = true; //tex overall switch of below
             //SYNC: CompileMakebiteBuildFiles
@@ -172,8 +172,9 @@ namespace mgsv_buildmod {
             bs.buildPath = UnfungePath(bs.buildPath);
             bs.gamePath = UnfungePath(bs.gamePath);
 
+            //TODO: unfunge modFolderPaths
 
-            if (!Directory.Exists(bs.gamePath)) {
+            if (bs.gamePath != null && !Directory.Exists(bs.gamePath)) {
                 Console.WriteLine($"ERROR: BuildModSettings: Could not find gamePath {bs.gamePath}");
                 return;
             }
