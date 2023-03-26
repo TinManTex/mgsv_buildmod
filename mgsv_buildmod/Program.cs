@@ -201,10 +201,6 @@ namespace mgsv_buildmod {
                 CopyLuaFpkdFiles(bs);
             }
 
-            if (bs.copyEngLng2sToOtherLangCodes) {
-                CopyEngLng2sToOtherLangCodes(bs);
-            }
-
             if (bs.copyModFolders) {
                 Console.WriteLine();
                 ConsoleTitleAndWriteLine("copying modFolderPaths folders");
@@ -226,7 +222,11 @@ namespace mgsv_buildmod {
                 CopyModulesToInternal(bs);
             }
 
-            if (bs.compileMakebiteBuildFiles) {//TODO: bs.runCompileFileTools or something
+            if (bs.copyEngLng2sToOtherLangCodes) {
+                CopyEngLng2sToOtherLangCodes(bs);
+            }
+
+            if (bs.compileMakebiteBuildFiles) {
                 Console.WriteLine();
                 CompileMakebiteBuildFiles(bs);
             }
@@ -482,8 +482,12 @@ namespace mgsv_buildmod {
 
             File.WriteAllText(jsonOutPath, jsonStringOut);
         }
-
+        //TODO: skip base game lngs
         private static void CopyEngLng2sToOtherLangCodes(BuildModSettings bs) {
+            if (!Directory.Exists(bs.makebiteBuildPath)) {
+                return;
+            }
+
             ConsoleTitleAndWriteLine("copy eng lang files to other lang codes");
             List<string> langCodes = new List<string> {
                 //"eng",
@@ -496,47 +500,44 @@ namespace mgsv_buildmod {
                 "spa"
             };
 
-            string lngPackPath = @"\Assets\tpp\pack\ui\lang";
-            string lngInternalPath = @"\Assets\tpp\lang\ui\";
+            string langCodeEng = "eng";
+            string lngPackPath = @"Assets\tpp\pack\ui\lang";
+            string lngInternalPath = @"Assets\tpp\lang\ui\";
+            string lngPackName = "lang_default_data";//_eng_fpk"; //TODO: let cfg provide names
 
-            //TODO
-            // \Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui
-            //for .lng2.xml files in modFolderPath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
-            //strip filename of .eng.lng2.xml?
+            //REF C:\\Projects\\MGS\\build\\infiniteheaven\\makebite]\\Assets\\tpp\\pack\\ui\\lang\\lang_default_data_eng_fpk\\Assets\\tpp\\lang\\ui\\"
+            string engLangPackPath = $"{bs.makebiteBuildPath}\\{lngPackPath}\\{lngPackName}_{langCodeEng}_fpk\\{lngInternalPath}";
+            engLangPackPath = UnfungePath(engLangPackPath);
+            if (!Directory.Exists(engLangPackPath)) {
+                Console.WriteLine($"WARNING: CopyEngLng2sToOtherLangCodes could not find lngPackPathDest: {engLangPackPath}");
+                return;
+            }
+            string[] engLangFiles = Directory.GetFiles(engLangPackPath);
+            foreach (string langCode in langCodes) {
+                foreach (string engLangFile in engLangFiles) {
+                    if (Path.GetExtension(engLangFile) != ".xml") {
+                        continue;
+                    }
+                    //REF fileName: ih_general.eng.lng2.xml
+                    string langFilePre = Path.GetFileName(engLangFile);
 
-            string lngPackPathTotal = @"\Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui\";
+                    string trimString = ".eng.lng2.xml";
+                    int trimPos = langFilePre.Length - trimString.Length;
+                    langFilePre = langFilePre.Remove(trimPos, trimString.Length);
+                    //REF langFilePre="ih_general"
 
-            foreach (string modFolderPath in bs.modFolderPaths) {
-                if (!Directory.Exists(modFolderPath)) {
-                    continue;
-                }
-                string totalPath = modFolderPath + lngPackPathTotal;
-                if (!Directory.Exists(totalPath)) {
-                    continue;
-                }
+                    string langFileDest = $"{bs.makebiteBuildPath}\\{lngPackPath}\\{lngPackName}_{langCode}_fpk\\{lngInternalPath}{langFilePre}.{langCode}.lng2.xml";
+                    langFileDest = UnfungePath(langFileDest);
 
-                foreach (string langCode in langCodes) {
-                    string[] langFiles = Directory.GetFiles(totalPath);
-                    foreach (string langFile in langFiles) {
-                        string langFilePre = Path.GetFileName(langFile);
-                        if (Path.GetExtension(langFile) != ".xml") {
-                            continue;
-                        }
-                        string trimString = ".eng.lng2.xml";
-                        int trimPos = langFilePre.Length - trimString.Length;
-                        langFilePre = langFilePre.Remove(trimPos, trimString.Length);
-                        string langFileEng = modFolderPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
-                        langFileEng = UnfungePath(langFileEng);
-
-
-                        string langFileDest = modFolderPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
-                        langFileDest = UnfungePath(langFileDest);
-
-                        File.Copy(langFileEng, langFileDest, true);
+                    if (!Directory.Exists(Path.GetDirectoryName(langFileDest))) {
+                        Directory.CreateDirectory(Path.GetDirectoryName(langFileDest));
                     }
 
-                }//foreach langCode
-            }//foreach modFolderPath
+                    bool overwrite = true;
+                    File.Copy(engLangFile, langFileDest, overwrite);
+                }//foreach langFile
+
+            }//foreach langCode
         }//CopyEngLng2sToOtherLangCodes
 
         private static void ConsoleTitleAndWriteLine(string logLine) {
