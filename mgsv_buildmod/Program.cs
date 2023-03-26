@@ -29,6 +29,7 @@ namespace mgsv_buildmod {
             public string Author = "";
             public string Website = "";
 
+            public string modPath = null; //@"C:\Projects\MGS\InfiniteHeaven\tpp";//tex root for relative paths within source mod layout, if null or empty modPath will be set to the path of the given buildSettings file
             public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
@@ -106,9 +107,23 @@ namespace mgsv_buildmod {
         }
 
         public static string UnfungePath(string path) {
-            String unfucked = new Uri(path).LocalPath;
-            return unfucked;
-        }
+            if (path == null) return null;
+            if (path.Length == 0) return null;
+
+            //GOTCHA: paths that start wit / or \ are assumed rooted.
+            if (path[0]== '/' || path[0]=='\\') { 
+                path = path.TrimStart('/');
+                path =path.TrimStart('\\');
+            }
+
+            if (Path.IsPathRooted(path)) {
+                String unfucked = new Uri(path).LocalPath;
+                return unfucked;
+            } else {
+                return path;
+            }
+        }//UnfungePath
+
 
         public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
@@ -130,17 +145,44 @@ namespace mgsv_buildmod {
 
             ConsoleTitleAndWriteLine("Read Config");
             string configPath = GetPath(args[0]);
+
             if (configPath == null) {
                 Console.Write("ERROR: could not find config path");
                 return;
             }
+            configPath = UnfungePath(configPath);
 
             string jsonString = File.ReadAllText(configPath);
             BuildModSettings bs = JsonConvert.DeserializeObject<BuildModSettings>(jsonString);
+
+            bs.modPath = UnfungePath(bs.modPath);
+            bs.luaFpkdFilesPath = UnfungePath(bs.luaFpkdFilesPath);
+            bs.docsPath = UnfungePath(bs.docsPath);
+            bs.metadataPath = UnfungePath(bs.metadataPath);
+            bs.externalLuaPath = UnfungePath(bs.externalLuaPath);
+            bs.modulesLuaPath = UnfungePath(bs.modulesLuaPath);
+            bs.modulesInternalPath = UnfungePath(bs.modulesInternalPath);
+            bs.makebiteBuildPath = UnfungePath(bs.makebiteBuildPath);
+            bs.buildPath = UnfungePath(bs.buildPath);
+            bs.gamePath = UnfungePath(bs.gamePath);
+
+
             if (!Directory.Exists(bs.gamePath)) {
                 Console.WriteLine($"ERROR: BuildModSettings: Could not find gamePath {bs.gamePath}");
                 return;
             }
+
+            if (bs.modPath != null && bs.modPath != "") {
+                if (!Directory.Exists(bs.modPath)) {
+                    Console.WriteLine($"ERROR: BuildModSettings: Could not find modPath {bs.modPath}");
+                    return;
+                }
+            }
+            else {
+                bs.modPath = Path.GetDirectoryName(configPath);
+            } 
+            
+            Environment.CurrentDirectory = bs.modPath;
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
 
@@ -388,7 +430,11 @@ namespace mgsv_buildmod {
                     string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
                     if (IsForFpk(buildFileInfo)) {
                         string packPath = buildFileInfo.packPath.Replace(".", "_");
-                        string internalPath = buildFileInfo.fullPath.Substring(bs.luaFpkdFilesPath.Length);
+                        var luaFpkdFilesPath = bs.luaFpkdFilesPath;
+                        if (!Path.IsPathRooted(luaFpkdFilesPath)) {
+                            luaFpkdFilesPath = Path.Combine(bs.modPath, bs.luaFpkdFilesPath);
+                        }
+                        string internalPath = buildFileInfo.fullPath.Substring(luaFpkdFilesPath.Length);
                         luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
                     }
                     Console.WriteLine(luaFileDestination);
@@ -416,7 +462,8 @@ namespace mgsv_buildmod {
                 if (!Directory.Exists(docsDestinationPath)) {
                     Directory.CreateDirectory(docsDestinationPath);
                 }
-                CopyFilesRecursively(new DirectoryInfo(bs.docsPath), new DirectoryInfo(docsDestinationPath), "", "");
+                string sourcePath = bs.docsPath;
+                CopyFilesRecursively(new DirectoryInfo(sourcePath), new DirectoryInfo(docsDestinationPath), "", "");
             }
         }
 
