@@ -29,19 +29,19 @@ namespace mgsv_buildmod {
             public string Author = "";
             public string Website = "";
 
+            public string modFileName = "Infinite Heaven";//tex .mgsv name
+            public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
+            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\docs\Infinite Heaven";
+            public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
+
             public string modPath = null; //@"C:\Projects\MGS\InfiniteHeaven\tpp";//tex root for relative paths within source mod layout, if null or empty modPath will be set to the path of the given buildSettings file
-            public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             //tex folders have various tools run on them (see buildFox2s etc settings)
             //then are copied outright to makebitepath
             ///so need to be in makebiteable layout
             //GOTCHA: don't fill this out with example because json entries are added rather than replace
             public List<string> modPackPaths = new List<string> { };
-
-            public string modFileName = "Infinite Heaven";//tex .mgsv name
-            public string readMeFileName = "Readme.txt";//STRUCURE inside docs path
-            public string docsPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\docs\Infinite Heaven";
-            public string metadataPath = @"C:\Projects\MGS\InfiniteHeaven\tpp";
+            public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\modules";//tex for copyModulesToInternal
@@ -152,8 +152,14 @@ namespace mgsv_buildmod {
             }
             configPath = UnfungePath(configPath);
 
+            //TODO: test path exists
+
             string jsonString = File.ReadAllText(configPath);
             BuildModSettings bs = JsonConvert.DeserializeObject<BuildModSettings>(jsonString);
+
+            if (bs.modPath == null || bs.modPath == "") {
+                bs.modPath = Path.GetDirectoryName(configPath);
+            }
 
             bs.modPath = UnfungePath(bs.modPath);
             bs.luaFpkdFilesPath = UnfungePath(bs.luaFpkdFilesPath);
@@ -172,15 +178,11 @@ namespace mgsv_buildmod {
                 return;
             }
 
-            if (bs.modPath != null && bs.modPath != "") {
-                if (!Directory.Exists(bs.modPath)) {
-                    Console.WriteLine($"ERROR: BuildModSettings: Could not find modPath {bs.modPath}");
-                    return;
-                }
+            if (!Directory.Exists(bs.modPath)) {
+                Console.WriteLine($"ERROR: BuildModSettings: Could not find modPath {bs.modPath}");
+                return;
             }
-            else {
-                bs.modPath = Path.GetDirectoryName(configPath);
-            } 
+   
             
             Environment.CurrentDirectory = bs.modPath;
 
@@ -287,7 +289,7 @@ namespace mgsv_buildmod {
         }//Main
 
         private static void UpdateMetadata(BuildModSettings bs) {
-            string makeBiteMetaDataFilePath = $"{bs.metadataPath}\\metadata.xml";
+            string makeBiteMetaDataFilePath = UnfungePath($"{bs.metadataPath}\\metadata.xml");
             string makeBiteMetaDataDestFilePath = $"{bs.makebiteBuildPath}\\metadata.xml";
 
             ConsoleTitleAndWriteLine("Updating metadata version tag");
