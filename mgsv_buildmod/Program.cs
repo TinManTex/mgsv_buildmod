@@ -40,7 +40,7 @@ namespace mgsv_buildmod {
             //then are copied outright to makebitepath
             ///so need to be in makebiteable layout
             //GOTCHA: don't fill this out with example because json entries are added rather than replace
-            public List<string> modPackPaths = new List<string> { };
+            public List<string> modFolderPaths = new List<string> { };
             public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
@@ -57,7 +57,7 @@ namespace mgsv_buildmod {
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
             public bool compileMakebiteBuildFiles = true; //tex overall switch of below
-            //SYNC: CompileModPackFiles
+            //SYNC: CompileMakebiteBuildFiles
             public Dictionary<string, bool> fileTypesToCompile = new Dictionary<string, bool>() {
                 {".bnd.xml", true },
                 {".clo.xml", true },
@@ -80,7 +80,7 @@ namespace mgsv_buildmod {
             };
             
             public bool copyLuaFpkdFiles = true;//tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
-            public bool copyModPackFolders = true;//tex uses modPackPaths
+            public bool copyModFolders = true;//tex uses modFolderPaths
             //tex copies externalLuaPath to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include externalLuaPath files in gamedir-mod\release)
             //uses externalLuaPath
@@ -204,10 +204,10 @@ namespace mgsv_buildmod {
                 CopyEngLng2sToOtherLangCodes(bs);
             }
 
-            if (bs.copyModPackFolders) {
+            if (bs.copyModFolders) {
                 Console.WriteLine();
-                ConsoleTitleAndWriteLine("copying modPackPaths folders");
-                foreach (string path in bs.modPackPaths) {
+                ConsoleTitleAndWriteLine("copying modFolderPaths folders");
+                foreach (string path in bs.modFolderPaths) {
                     if (Directory.Exists(path)) {
                         Console.WriteLine(path);
                         CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", "");
@@ -350,10 +350,10 @@ namespace mgsv_buildmod {
                 {".lng2.xml", Properties.Settings.Default.langToolPath },
             };
 
-            Console.WriteLine("Getting modPackPaths list");
+            Console.WriteLine("Getting makebiteBuildPath files list");
             var makebiteBuildFiles = Directory.GetFiles(bs.makebiteBuildPath, "*.*", SearchOption.AllDirectories);
 
-            Console.WriteLine("Compiling modPackPaths files");
+            Console.WriteLine("Compiling makebiteBuildPath files");
             var taskWatch = new Stopwatch();
             taskWatch.Start();
             var tasks = new List<Task>();
@@ -366,7 +366,7 @@ namespace mgsv_buildmod {
                         //UseTool(fileTypesToCompileToolPaths[item.Key], filePath);//DEBUGNOW
                     }
                 }
-            }//foreach modPackPath
+            }//foreach filePath
             Task.WaitAll(tasks.ToArray());
             taskWatch.Stop();
             Console.WriteLine($"time to compile: {taskWatch.ElapsedMilliseconds}ms");
@@ -403,7 +403,7 @@ namespace mgsv_buildmod {
                     string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
                     Directory.CreateDirectory(internalPath);
                     CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
-                    //DEBUGNOW also don't like this, modules will have been blindly copied via modPackPaths, so kill them
+                    //DEBUGNOW also don't like this, modules will have been blindly copied via modFolderPaths, so kill them
                     string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
                     if (Directory.Exists(buildExternalAssetsPath)) {
                         DeleteAndWait(buildExternalAssetsPath);
@@ -500,16 +500,16 @@ namespace mgsv_buildmod {
 
             //TODO
             // \Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui
-            //for .lng2.xml files in modPackPath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
+            //for .lng2.xml files in modFolderPath > lngPackPath + lang_default_data_eng_fpk + lngInternalPath
             //strip filename of .eng.lng2.xml?
 
             string lngPackPathTotal = @"\Assets\tpp\pack\ui\lang\lang_default_data_eng_fpk\Assets\tpp\lang\ui\";
 
-            foreach (string modPackPath in bs.modPackPaths) {
-                if (!Directory.Exists(modPackPath)) {
+            foreach (string modFolderPath in bs.modFolderPaths) {
+                if (!Directory.Exists(modFolderPath)) {
                     continue;
                 }
-                string totalPath = modPackPath + lngPackPathTotal;
+                string totalPath = modFolderPath + lngPackPathTotal;
                 if (!Directory.Exists(totalPath)) {
                     continue;
                 }
@@ -524,18 +524,18 @@ namespace mgsv_buildmod {
                         string trimString = ".eng.lng2.xml";
                         int trimPos = langFilePre.Length - trimString.Length;
                         langFilePre = langFilePre.Remove(trimPos, trimString.Length);
-                        string langFileEng = modPackPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
+                        string langFileEng = modFolderPath + lngPackPath + @"\lang_default_data_eng_fpk" + lngInternalPath + langFilePre + "." + "eng" + ".lng2.xml";
                         langFileEng = UnfungePath(langFileEng);
 
 
-                        string langFileDest = modPackPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
+                        string langFileDest = modFolderPath + lngPackPath + @"\lang_default_data_" + langCode + "_fpk" + lngInternalPath + langFilePre + "." + langCode + ".lng2.xml";
                         langFileDest = UnfungePath(langFileDest);
 
                         File.Copy(langFileEng, langFileDest, true);
                     }
 
                 }//foreach langCode
-            }//foreach modPackPath
+            }//foreach modFolderPath
         }//CopyEngLng2sToOtherLangCodes
 
         private static void ConsoleTitleAndWriteLine(string logLine) {
