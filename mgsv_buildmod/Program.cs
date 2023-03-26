@@ -56,7 +56,7 @@ namespace mgsv_buildmod {
 
             public bool copyEngLng2sToOtherLangCodes = true;//tex if you dont have actual translations for lang codes this will copy the eng lng2s to the other lang code lng2s
 
-            public bool compileModPackFiles = true; //tex overall switch of below
+            public bool compileMakebiteBuildFiles = true; //tex overall switch of below
             //SYNC: CompileModPackFiles
             public Dictionary<string, bool> fileTypesToCompile = new Dictionary<string, bool>() {
                 {".bnd.xml", true },
@@ -204,17 +204,13 @@ namespace mgsv_buildmod {
                 CopyEngLng2sToOtherLangCodes(bs);
             }
 
-            if (bs.compileModPackFiles) {
-                CompileModPackFiles(bs);
-            }
-
             if (bs.copyModPackFolders) {
                 Console.WriteLine();
                 ConsoleTitleAndWriteLine("copying modPackPaths folders");
                 foreach (string path in bs.modPackPaths) {
                     if (Directory.Exists(path)) {
                         Console.WriteLine(path);
-                        CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", ".xml");
+                        CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", "");
                     }
                 }
             }
@@ -227,6 +223,11 @@ namespace mgsv_buildmod {
             if (bs.copyModulesToInternal) {
                 Console.WriteLine();
                 CopyModulesToInternal(bs);
+            }
+
+            if (bs.compileMakebiteBuildFiles) {//TODO: bs.runCompileFileTools or something
+                Console.WriteLine();
+                CompileMakebiteBuildFiles(bs);
             }
 
             UpdateMetadata(bs);
@@ -322,7 +323,8 @@ namespace mgsv_buildmod {
             }
         }//UpdateMetadata
 
-        private static void CompileModPackFiles(BuildModSettings bs) {
+        private static void CompileMakebiteBuildFiles(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("Compiling file types in makebiteBuildPath");
             //TODO: problem: subptool names its decompiled files .xml instead of .subp.xml, also needs encoding?
             //TODO: add other fox2 types, and other tools, in IH cull the .xml files of those you haven't actually modified and use the original retail files
             //TODO: even though I've just toolspaths to Properties.Settings, this is making me think of moving to toolspaths .json in exe dir
@@ -349,13 +351,13 @@ namespace mgsv_buildmod {
             };
 
             Console.WriteLine("Getting modPackPaths list");
-            var modPackFiles = bs.modPackPaths.SelectMany(modPackPath => Directory.EnumerateFiles(modPackPath, "*.*", SearchOption.AllDirectories));
+            var makebiteBuildFiles = Directory.GetFiles(bs.makebiteBuildPath, "*.*", SearchOption.AllDirectories);
 
             Console.WriteLine("Compiling modPackPaths files");
             var taskWatch = new Stopwatch();
             taskWatch.Start();
             var tasks = new List<Task>();
-            foreach (var filePath in modPackFiles) {
+            foreach (var filePath in makebiteBuildFiles) {
                 foreach (var item in bs.fileTypesToCompile) {
                     if (filePath.Contains(item.Key) && item.Value == true) {
                         //Console.WriteLine($"filePath: {filePath}");//DEBUGNOW //tex GOTCHA: any logging in loops will dratsically increase the processing time,
@@ -368,7 +370,7 @@ namespace mgsv_buildmod {
             Task.WaitAll(tasks.ToArray());
             taskWatch.Stop();
             Console.WriteLine($"time to compile: {taskWatch.ElapsedMilliseconds}ms");
-        }
+        }//CompileMakebiteBuildFiles
 
         private static void CopyModulesToInternal(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("copying external modules folder to internal");
