@@ -132,34 +132,13 @@ namespace mgsv_buildmod {
             public bool waitEnd = true;//tex leaves program window open when done, with press any key to exit
         }//BuildModSettings
 
+        //CULL CopyLuaFpkdFiles
         public class BuildFileInfo {
             public string fullPath = "";
             public bool doBuild = false;
             // public string filePath = "";
             public string packPath = "";
         }
-
-        public static string UnfungePath(string path) {
-            if (path == null) return null;
-            if (path.Length == 0) return null;
-
-            //GOTCHA: paths that start wit / or \ are assumed rooted.
-            if (path[0]== '/' || path[0]=='\\') { 
-                path = path.TrimStart('/');
-                path = path.TrimStart('\\');
-            }
-
-            path = path.Replace("/","\\");
-
-            //if (Path.IsPathRooted(path)) {
-            //    String unfucked = new Uri(path).LocalPath;//tex outputs backslashes, and uhh what else was i using this for?
-            //    return unfucked;
-            //} else {
-            //    return path;
-            //}
-            return path;
-        }//UnfungePath
-
 
         public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
@@ -730,6 +709,7 @@ namespace mgsv_buildmod {
             }
         }//TraverseTreeFileInfoList
 
+        //CULL
         public static void ReadLuaBuildInfoProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
 
             /* REF:
@@ -820,6 +800,26 @@ namespace mgsv_buildmod {
             var exitCode = p.ExitCode;
             // return output;
         }
+        public static string UnfungePath(string path) {
+            if (path == null) return null;
+            if (path.Length == 0) return null;
+
+            //GOTCHA: paths that start wit / or \ are assumed rooted.
+            if (path[0] == '/' || path[0] == '\\') {
+                path = path.TrimStart('/');
+                path = path.TrimStart('\\');
+            }
+
+            path = path.Replace("/", "\\");
+
+            //if (Path.IsPathRooted(path)) {
+            //    String unfucked = new Uri(path).LocalPath;//tex outputs backslashes, and uhh what else was i using this for?
+            //    return unfucked;
+            //} else {
+            //    return path;
+            //}
+            return path;
+        }//UnfungePath
 
         public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target, string extension, string exclude) {
             foreach (DirectoryInfo dir in source.GetDirectories())
