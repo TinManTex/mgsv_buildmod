@@ -59,6 +59,7 @@ namespace mgsv_buildmod {
                 // },
             };//modFileLists
 
+            //copyModArchiveFiles
             public Dictionary<string,
                 Dictionary<string,List<string>>> modArchiveFiles = new Dictionary<string,
                                                                         Dictionary<string, List<string>>>() {
@@ -68,7 +69,7 @@ namespace mgsv_buildmod {
                 //}, },
             };//modArchiveFiles
 
-            public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
+            public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles //CULL supersceded by copyModArchiveFiles
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
             public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\modules";//tex for copyModulesToInternal
@@ -106,7 +107,7 @@ namespace mgsv_buildmod {
                 {".lng2.xml", true },
             };
             
-            public bool copyLuaFpkdFiles = true;//tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
+            public bool copyLuaFpkdFiles = false;//CULL supersceded by copyModArchiveFiles //tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths, 
             public bool copyModFolders = true;//tex uses modFolderPaths
 
             public bool copyModFileLists = true;//for modFileLists
@@ -232,6 +233,7 @@ namespace mgsv_buildmod {
                 CopyDocsToBuild(bs);
             }
 
+            //CULL supersceded by copyModArchiveFiles
             if (bs.copyLuaFpkdFiles) {
                 CopyLuaFpkdFiles(bs);
             }
