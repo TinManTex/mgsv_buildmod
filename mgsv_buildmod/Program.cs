@@ -77,7 +77,7 @@ namespace mgsv_buildmod {
             bs.buildPath = UnfungePath(bs.buildPath);
             bs.gamePath = UnfungePath(bs.gamePath);
 
-            //TODO: unfunge modFolderPaths
+            //TODO: unfunge modFolders, modFiles, modArchiveFiles
 
             if (bs.gamePath != null && !Directory.Exists(bs.gamePath)) {
                 Console.WriteLine($"ERROR: BuildModSettings: Could not find gamePath {bs.gamePath}");
@@ -93,6 +93,8 @@ namespace mgsv_buildmod {
             Environment.CurrentDirectory = bs.modPath;
 
             String appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);//UNUSED
+
+            //buildmod
 
             ConsoleTitleAndWriteLine("deleting existing makebite build folder");
             DeleteAndWait(bs.makebiteBuildPath);//tex GOTCHA will complain if open in explorer
@@ -200,6 +202,8 @@ namespace mgsv_buildmod {
                 stepWatch.Stop();
                 Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
             }
+
+            //done
 
             runWatch.Stop();
             ConsoleTitleAndWriteLine($"done in {runWatch.ElapsedMilliseconds}ms");
