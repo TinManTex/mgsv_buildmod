@@ -496,7 +496,8 @@ namespace mgsv_buildmod {
                             luaFpkdFilesPath = Path.Combine(bs.modPath, bs.luaFpkdFilesPath);
                         }
                         string internalPath = buildFileInfo.fullPath.Substring(luaFpkdFilesPath.Length);
-                        luaFileDestination = bs.makebiteBuildPath + packPath + internalPath;
+                        luaFileDestination = $"{bs.makebiteBuildPath}\\{packPath}\\{internalPath}";
+                        luaFileDestination = UnfungePath(luaFileDestination);
                     }
                     Console.WriteLine(luaFileDestination);
 
