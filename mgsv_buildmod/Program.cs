@@ -43,27 +43,27 @@ namespace mgsv_buildmod {
             var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log //TODO: actually doesnt capture external process exceptions? I guess I need to capture Console.Error too? 
 
             if (args.Length == 0) {
-                Console.WriteLine("Usage: mgsv_buildmod <config path>.json");
-                WriteDefaultConfigJson();
+                Console.WriteLine("Usage: mgsv_buildmod <buildSettings path>.json");
+                WriteDefaultBuildSettingsJson();
                 return;
             }//args 0
 
-            ConsoleTitleAndWriteLine("Read Config");
-            string configPath = GetPath(args[0]);
+            ConsoleTitleAndWriteLine("Read BuildSettings");
+            string buildSettingsPath = GetPath(args[0]);
 
-            if (configPath == null) {
-                Console.Write("ERROR: could not find config path");
+            if (buildSettingsPath == null) {
+                Console.Write("ERROR: could not find buildSettings path");
                 return;
             }
-            configPath = UnfungePath(configPath);
+            buildSettingsPath = UnfungePath(buildSettingsPath);
 
             //TODO: test path exists
 
-            string jsonString = File.ReadAllText(configPath);
+            string jsonString = File.ReadAllText(buildSettingsPath);
             BuildModSettings bs = JsonConvert.DeserializeObject<BuildModSettings>(jsonString);
 
             if (bs.modPath == null || bs.modPath == "") {
-                bs.modPath = Path.GetDirectoryName(configPath);
+                bs.modPath = Path.GetDirectoryName(buildSettingsPath);
             }
 
             bs.modPath = UnfungePath(bs.modPath);
@@ -466,13 +466,13 @@ namespace mgsv_buildmod {
             }
         }
 
-        private static void WriteDefaultConfigJson() {
-            var config = new BuildModSettings();
-            string jsonOutPath = @".\build-config-example.json";
-            Console.WriteLine($"Writing default config to {jsonOutPath}");
+        private static void WriteDefaultBuildSettingsJson() {
+            var buildSettings = new BuildModSettings();
+            string jsonOutPath = @".\buildSettings-example.json";
+            Console.WriteLine($"Writing default buildSettings to {jsonOutPath}");
             JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
             serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-            string jsonStringOut = JsonConvert.SerializeObject(config, serializeSettings);
+            string jsonStringOut = JsonConvert.SerializeObject(buildSettings, serializeSettings);
 
             File.WriteAllText(jsonOutPath, jsonStringOut);
         }
