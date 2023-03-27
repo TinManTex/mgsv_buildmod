@@ -40,7 +40,25 @@ namespace mgsv_buildmod {
             //then are copied outright to makebitepath
             ///so need to be in makebiteable layout
             //GOTCHA: don't fill this out with example because json entries are added rather than replace
-            public List<string> modFolderPaths = new List<string> { };
+            public List<string> modFolderPaths = new List<string> { 
+                //REF
+                //"fpk-mod/",
+                //"fpk-mod-ih/",
+            };
+
+            public Dictionary<string, List<string>> modFileLists = new Dictionary<string, List<string>>() {
+                //REF
+                //{"data1_dat-lua-ih/", new List<string>{
+                //    "init.lua",
+                //    "Assets/tpp/level_asset/chara/enemy/Soldier2FaceAndBodyData.lua",
+                //    "Assets/tpp/script/lib/Tpp.lua",
+                //    "Assets/tpp/script/lib/TppAnimal.lua",
+                //    "Assets/tpp/script/lib/TppClock.lua",
+                //    "Assets/tpp/script/lib/TppDefine.lua"
+                //    }
+                // },
+            };//modFileLists
+
             public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
@@ -81,6 +99,9 @@ namespace mgsv_buildmod {
             
             public bool copyLuaFpkdFiles = true;//tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths
             public bool copyModFolders = true;//tex uses modFolderPaths
+
+            public bool copyModFileLists = true;//for modFileLists
+
             //tex copies externalLuaPath to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include externalLuaPath files in gamedir-mod\release)
             //uses externalLuaPath
@@ -113,15 +134,18 @@ namespace mgsv_buildmod {
             //GOTCHA: paths that start wit / or \ are assumed rooted.
             if (path[0]== '/' || path[0]=='\\') { 
                 path = path.TrimStart('/');
-                path =path.TrimStart('\\');
+                path = path.TrimStart('\\');
             }
 
-            if (Path.IsPathRooted(path)) {
-                String unfucked = new Uri(path).LocalPath;
-                return unfucked;
-            } else {
-                return path;
-            }
+            path = path.Replace("/","\\");
+
+            //if (Path.IsPathRooted(path)) {
+            //    String unfucked = new Uri(path).LocalPath;//tex outputs backslashes, and uhh what else was i using this for?
+            //    return unfucked;
+            //} else {
+            //    return path;
+            //}
+            return path;
         }//UnfungePath
 
 
@@ -212,6 +236,11 @@ namespace mgsv_buildmod {
                 }
             }
 
+            if (bs.copyModFileLists) {
+                Console.WriteLine();
+                CopyModFileLists(bs);
+            }
+
             if (bs.copyExternalLuaToInternal) {
                 Console.WriteLine();
                 CopyExternalLuaToInternal(bs);
@@ -240,7 +269,10 @@ namespace mgsv_buildmod {
                 stepWatch.Restart();
                 ConsoleTitleAndWriteLine("makebite building " + makebiteMgsvOutputFilePath);
                 string toolArgs = "";
-                toolArgs += bs.makebiteBuildPath;
+                //tex WORKAROUND: currently (smakebite 0.9.2.2) makebite crahes on a qarFile in root (init.lua) if provided with build folder that has a trailing slash
+                string makebiteBuildPath = bs.makebiteBuildPath.TrimEnd('\\');
+
+                toolArgs += makebiteBuildPath;
                 UseTool(Properties.Settings.Default.makeBitePath, toolArgs);
 
                 if (!File.Exists(makebiteMgsvOutputFilePath)) {
@@ -289,6 +321,30 @@ namespace mgsv_buildmod {
                 Console.ReadKey();
             }
         }//Main
+
+        private static void CopyModFileLists(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copyModFileLists");
+            if (bs.copyModFileLists) {
+                foreach (var item in bs.modFileLists) {
+                    string listFolderPath = item.Key;
+                    List<string> fileList = item.Value;
+                    Console.WriteLine(listFolderPath);
+                    foreach (string listFilePath in fileList) {
+                        Console.WriteLine(listFilePath);
+                        string filePath = $"{listFolderPath}/{listFilePath}";
+                        filePath = UnfungePath(filePath);
+
+                        string fileDest = $"{bs.makebiteBuildPath}/{listFilePath}";
+                        fileDest = UnfungePath(fileDest);
+                        if (!Directory.Exists(Path.GetDirectoryName(fileDest))) {
+                            Directory.CreateDirectory(Path.GetDirectoryName(fileDest));
+                        }
+
+                        File.Copy(filePath, fileDest, true);
+                    }//foreach in  listFolder
+                }//foreach in modFileLists
+            }//if copyModFileLists
+        }//CopyModFileLists
 
         private static void UpdateMetadata(BuildModSettings bs) {
             string makeBiteMetaDataFilePath = UnfungePath($"{bs.metadataPath}\\metadata.xml");
