@@ -59,6 +59,15 @@ namespace mgsv_buildmod {
                 // },
             };//modFileLists
 
+            public Dictionary<string,
+                Dictionary<string,List<string>>> modArchiveFiles = new Dictionary<string,
+                                                                        Dictionary<string, List<string>>>() {
+                //REF
+                //{"fpkd-combined-lua/", new Dictionary<string, List<string>>{
+                //    {"Assets/tpp/level/mission2/init/init_sequence.lua", new List<string>{"Assets/tpp/pack/mission2/init/init_fpkd" },
+                //}, },
+            };//modArchiveFiles
+
             public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles 
 
             public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
@@ -101,6 +110,8 @@ namespace mgsv_buildmod {
             public bool copyModFolders = true;//tex uses modFolderPaths
 
             public bool copyModFileLists = true;//for modFileLists
+
+            public bool copyModArchiveFiles = true;//for modArchiveFiles
 
             //tex copies externalLuaPath to internal, intended for release. So you can develop using IHs external (gamedir\mod\<in-dat path>), and then copy them in to in-dat for release
             //WARNING: ih will still try to load external by default, so do not include externalLuaPath files in gamedir-mod\release)
@@ -241,6 +252,11 @@ namespace mgsv_buildmod {
                 CopyModFileLists(bs);
             }
 
+            if (bs.copyModArchiveFiles) {
+                Console.WriteLine();
+                CopyModArchiveFiles(bs);
+            }
+
             if (bs.copyExternalLuaToInternal) {
                 Console.WriteLine();
                 CopyExternalLuaToInternal(bs);
@@ -345,6 +361,48 @@ namespace mgsv_buildmod {
                 }//foreach in modFileLists
             }//if copyModFileLists
         }//CopyModFileLists
+
+        private static void CopyModArchiveFiles(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copyModArchiveFiles");
+            //REF
+            //Dictionary<string, List<string>> > modArchiveFiles = new Dictionary<string,
+            //                                                Dictionary<string, List<string>>>() {
+            //REF buildSettings
+            //"modArchiveFiles": {
+            //    //source folder (absolute or modPath relative)
+            //    "fpkd-combined-lua/": {
+            //        //{file in source: [target archive folder, another target archive]}
+            //        "Assets/tpp/level/mission2/init/init_sequence.lua":          ["Assets/tpp/pack/mission2/init/init_fpkd"],
+            if (bs.copyModArchiveFiles) {
+                foreach (var item in bs.modArchiveFiles) {
+                    //REF "fpkd-combined-lua/"
+                    string listFolderPath = item.Key;                    
+                    Console.WriteLine(listFolderPath);
+                    
+                    Dictionary<string, List<string>> fileArchiveLists = item.Value;
+                    foreach (var fileArchiveList in fileArchiveLists) {
+                        //REF "Assets/tpp/level/mission2/init/init_sequence.lua"
+                        string inArchiveFilePath = fileArchiveList.Key;
+                        Console.WriteLine(inArchiveFilePath);
+
+                        string fileSource = $"{listFolderPath}/{inArchiveFilePath}";
+                        fileSource = UnfungePath(fileSource);
+
+                        //REF ["Assets/tpp/pack/mission2/init/init_fpkd"]
+                        List<string> archiveFilePaths = fileArchiveList.Value;
+                        foreach (string archivePath in archiveFilePaths) {
+                            string fileDest = $"{bs.makebiteBuildPath}/{archivePath}/{inArchiveFilePath}";
+                            fileDest = UnfungePath(fileDest);
+                            if (!Directory.Exists(Path.GetDirectoryName(fileDest))) {
+                                Directory.CreateDirectory(Path.GetDirectoryName(fileDest));
+                            }
+
+                            File.Copy(fileSource, fileDest, true);
+                        }//foreach in archiveFilePaths
+                    }//foreach in  listFolder
+                }//foreach in modFileLists
+            }//if copyModArchiveFiles
+        }//CopyModArchiveFiles
 
         private static void UpdateMetadata(BuildModSettings bs) {
             string makeBiteMetaDataFilePath = UnfungePath($"{bs.metadataPath}\\metadata.xml");
