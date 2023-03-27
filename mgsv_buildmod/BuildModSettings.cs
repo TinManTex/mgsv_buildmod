@@ -23,13 +23,13 @@ namespace mgsv_buildmod {
         //then are copied outright to makebitepath
         ///so need to be in makebiteable layout
         //GOTCHA: don't fill this out with example because json entries are added rather than replace
-        public List<string> modFolderPaths = new List<string> {
+        public List<string> modFolders = new List<string> {
             //REF
             //"fpk-mod/",
             //"fpk-mod-ih/",
         };
 
-        public Dictionary<string, List<string>> modFileLists = new Dictionary<string, List<string>>() {
+        public Dictionary<string, List<string>> modFiles = new Dictionary<string, List<string>>() {
             //REF
             //{"data1_dat-lua-ih/", new List<string>{
             //    "init.lua",
@@ -40,7 +40,7 @@ namespace mgsv_buildmod {
             //    "Assets/tpp/script/lib/TppDefine.lua"
             //    }
             // },
-        };//modFileLists
+        };//modFiles
 
         //copyModArchiveFiles
         public Dictionary<string,
@@ -91,9 +91,10 @@ namespace mgsv_buildmod {
         };
 
         public bool copyLuaFpkdFiles = false;//CULL supersceded by copyModArchiveFiles //tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths, 
-        public bool copyModFolders = true;//tex uses modFolderPaths
+        
+        public bool copyModFolders = true;//tex uses modFolders
 
-        public bool copyModFileLists = true;//for modFileLists
+        public bool copyModFiles = true;//for modFiles
 
         public bool copyModArchiveFiles = true;//for modArchiveFiles
 

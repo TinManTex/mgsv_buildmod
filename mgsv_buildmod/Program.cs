@@ -111,18 +111,12 @@ namespace mgsv_buildmod {
 
             if (bs.copyModFolders) {
                 Console.WriteLine();
-                ConsoleTitleAndWriteLine("copying modFolderPaths folders");
-                foreach (string path in bs.modFolderPaths) {
-                    if (Directory.Exists(path)) {
-                        Console.WriteLine(path);
-                        CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", "");
-                    }
-                }
+                CopyModFolders(bs);
             }
 
-            if (bs.copyModFileLists) {
+            if (bs.copyModFiles) {
                 Console.WriteLine();
-                CopyModFileLists(bs);
+                CopyModFiles(bs);
             }
 
             if (bs.copyModArchiveFiles) {
@@ -213,10 +207,20 @@ namespace mgsv_buildmod {
             }
         }//Main
 
-        private static void CopyModFileLists(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("copyModFileLists");
-            if (bs.copyModFileLists) {
-                foreach (var item in bs.modFileLists) {
+        private static void CopyModFolders(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copyModFolders");
+            foreach (string path in bs.modFolders) {
+                if (Directory.Exists(path)) {
+                    Console.WriteLine(path);
+                    CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", "");
+                }
+            }
+        }
+
+        private static void CopyModFiles(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("copyModFiles");
+            if (bs.copyModFiles) {
+                foreach (var item in bs.modFiles) {
                     string listFolderPath = item.Key;
                     List<string> fileList = item.Value;
                     Console.WriteLine(listFolderPath);
@@ -233,9 +237,9 @@ namespace mgsv_buildmod {
 
                         File.Copy(filePath, fileDest, true);
                     }//foreach in  listFolder
-                }//foreach in modFileLists
-            }//if copyModFileLists
-        }//CopyModFileLists
+                }//foreach in modFiles
+            }//if copyModFiles
+        }//CopyModFiles
 
         private static void CopyModArchiveFiles(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("copyModArchiveFiles");
@@ -275,7 +279,7 @@ namespace mgsv_buildmod {
                             File.Copy(fileSource, fileDest, true);
                         }//foreach in archiveFilePaths
                     }//foreach in  listFolder
-                }//foreach in modFileLists
+                }//foreach in modArchiveFiles
             }//if copyModArchiveFiles
         }//CopyModArchiveFiles
 
@@ -393,7 +397,7 @@ namespace mgsv_buildmod {
                     string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
                     Directory.CreateDirectory(internalPath);
                     CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
-                    //DEBUGNOW also don't like this, modules will have been blindly copied via modFolderPaths, so kill them
+                    //DEBUGNOW TODO also don't like this, modules will have been blindly copied via modFolders, so kill them
                     string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
                     if (Directory.Exists(buildExternalAssetsPath)) {
                         DeleteAndWait(buildExternalAssetsPath);
