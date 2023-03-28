@@ -34,7 +34,7 @@ namespace mgsv_buildmod {
             var cc = new ConsoleCopy("mgsv_buildmod_log.txt");//tex anything written to Console is also written to log //TODO: actually doesnt capture external process exceptions? I guess I need to capture Console.Error too? 
 
             if (args.Length == 0) {
-                Console.WriteLine("Usage: mgsv_buildmod <buildSettings path>.json");
+                Console.WriteLine("Usage: mgsv_buildmod <buildSettings filePath>");
                 WriteDefaultBuildSettingsJson();
                 return;
             }//args 0
@@ -417,7 +417,7 @@ namespace mgsv_buildmod {
 
         private static void WriteDefaultBuildSettingsJson() {
             var buildSettings = new BuildModSettings();
-            string jsonOutPath = @".\buildSettings-example.json";
+            string jsonOutPath = @".\buildSettings-example.buildmod";
             Console.WriteLine($"Writing default buildSettings to {jsonOutPath}");
             JsonSerializerSettings serializeSettings = new JsonSerializerSettings();
             serializeSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
