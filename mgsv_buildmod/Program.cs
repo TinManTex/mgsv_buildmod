@@ -103,7 +103,10 @@ namespace mgsv_buildmod {
             }
 
             Console.WriteLine();
+            stepWatch.Restart();
             CopyModFiles(bs);
+            stepWatch.Stop();
+            Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
 
             if (bs.copyExternalLuaToInternal) {
                 Console.WriteLine();
