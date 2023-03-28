@@ -58,9 +58,6 @@ namespace mgsv_buildmod {
         };//modFiles
 
         public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
- 
-        //CULL
-        public string luaFpkdFilesPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\fpkd-combined-lua";//tex for copyLuaFpkdFiles //CULL supersceded by copyModArchiveFiles
 
         public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\modules";//tex for copyModulesToInternal
         public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
@@ -99,8 +96,6 @@ namespace mgsv_buildmod {
             {".lng.xml", true },
             {".lng2.xml", true },
         };
-
-        public bool copyLuaFpkdFiles = false;//CULL supersceded by copyModArchiveFiles //tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths, 
 
         public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
 

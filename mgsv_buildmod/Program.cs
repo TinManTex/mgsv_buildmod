@@ -22,15 +22,6 @@ using Newtonsoft.Json;
 
 namespace mgsv_buildmod {
     class Program {
-        //CULL CopyLuaFpkdFiles
-        public class BuildFileInfo {
-            public string fullPath = "";
-            public bool doBuild = false;
-            // public string filePath = "";
-            public string packPath = "";
-        }
-
-        public delegate void ProcessFileDelegateBuildFileInfoList(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList);
         static string titlePrefix = "mgsv_buildmod - ";
         static void Main(string[] args) {
             var runWatch = new Stopwatch();
@@ -75,7 +66,6 @@ namespace mgsv_buildmod {
             }
 
             bs.modPath = UnfungePath(bs.modPath);
-            bs.luaFpkdFilesPath = UnfungePath(bs.luaFpkdFilesPath);
             bs.docsPath = UnfungePath(bs.docsPath);
             bs.metadataPath = UnfungePath(bs.metadataPath);
             bs.externalLuaPath = UnfungePath(bs.externalLuaPath);
@@ -110,11 +100,6 @@ namespace mgsv_buildmod {
             ConsoleTitleAndWriteLine("Copy docs and exes");
             if (bs.copyDocsToBuild) {
                 CopyDocsToBuild(bs);
-            }
-
-            //CULL supersceded by copyModArchiveFiles
-            if (bs.copyLuaFpkdFiles) {
-                CopyLuaFpkdFiles(bs);
             }
 
             Console.WriteLine();
@@ -283,9 +268,9 @@ namespace mgsv_buildmod {
                         string fileSource = $"{modFolderPath}/{folderRelativeFilePath}";
                         fileSource = UnfungePath(fileSource);
                         File.Copy(fileSource, fileDest, true);
-                    }//foreach in archiveFilePaths
-                }//foreach in  listFolder
-            }//foreach in modArchiveFiles
+                    }//foreach in targetFolderPaths
+                }//foreach in  fileAndTargetFolderPaths
+            }//foreach in modFiles
         }//CopyModFiles
 
         private static void UpdateMetadata(BuildModSettings bs) {
@@ -411,50 +396,6 @@ namespace mgsv_buildmod {
             }
         }
 
-        private static void CopyLuaFpkdFiles(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("CopyLuaFpkdFiles");
-            ConsoleTitleAndWriteLine("generating buildInfo");
-            Dictionary<string, BuildFileInfo> modFilesInfo = new Dictionary<string, BuildFileInfo>();
-            //tex TODO restrict to Data1Lua,FpkCombineLua
-            TraverseTreeFileInfoList(bs.luaFpkdFilesPath, ".lua", ReadLuaBuildInfoProcess, ref modFilesInfo);
-            //tex allow text files as subsituted //TODO wut
-            //TraverseTreeFileInfoList(luaPath, ".txt", ReadLuaBuildInfoProcess, ref modFilesInfo);
-            if (modFilesInfo.Count == 0) {
-                //DEBUGNOW hmm
-                Console.WriteLine("no mod files found");
-                return;
-            }
-
-            Console.WriteLine();
-
-            ConsoleTitleAndWriteLine("copying mod files to build folder");
-            foreach (BuildFileInfo buildFileInfo in modFilesInfo.Values) {
-                if (buildFileInfo.doBuild) {
-                    string luaFileDestination = "";// = bs.makebiteBuildPath + buildFileInfo.filePath + "\\";
-                    if (IsForFpk(buildFileInfo)) {
-                        string packPath = buildFileInfo.packPath.Replace(".", "_");
-                        var luaFpkdFilesPath = bs.luaFpkdFilesPath;
-                        if (!Path.IsPathRooted(luaFpkdFilesPath)) {
-                            luaFpkdFilesPath = Path.Combine(bs.modPath, bs.luaFpkdFilesPath);
-                        }
-                        string internalPath = buildFileInfo.fullPath.Substring(luaFpkdFilesPath.Length);
-                        luaFileDestination = $"{bs.makebiteBuildPath}\\{packPath}\\{internalPath}";
-                        luaFileDestination = UnfungePath(luaFileDestination);
-                    }
-                    Console.WriteLine(luaFileDestination);
-
-                    //tex GOTCHA most common crash with ioexception will be due to some file in projectpath
-                    //having DOBUILD (example in externallua or mockfox)
-                    //I should just restrict buildfileinfo to data1,
-                    string dir = Path.GetDirectoryName(luaFileDestination);
-                    if (!Directory.Exists(dir)) {
-                        Directory.CreateDirectory(dir);
-                    }
-                    File.Copy(buildFileInfo.fullPath, luaFileDestination, true);
-                }
-            }
-        }//CopyLuaFpkdFiles
-
         private static void CopyDocsToBuild(BuildModSettings bs) {
             if (Directory.Exists(bs.docsPath)) {
                 Console.Title = titlePrefix + "Copy docs";
@@ -552,141 +493,6 @@ namespace mgsv_buildmod {
                 Thread.Sleep(100);
             }
         }
-
-        private static bool IsForFpk(BuildFileInfo buildFileInfo) {
-            return buildFileInfo.packPath != "";
-        }
-
-        public static void TraverseTreeFileInfoList(string root, string extension, ProcessFileDelegateBuildFileInfoList processFile, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
-            Stack<string> dirs = new Stack<string>(20);
-
-            if (!System.IO.Directory.Exists(root)) {
-                throw new ArgumentException();
-            }
-            dirs.Push(root);
-
-            while (dirs.Count > 0) {
-                string currentDir = dirs.Pop();
-                string[] subDirs;
-                try {
-                    subDirs = System.IO.Directory.GetDirectories(currentDir);
-                }
-                catch (UnauthorizedAccessException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-                catch (System.IO.DirectoryNotFoundException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-
-                string[] files = null;
-                try {
-                    files = System.IO.Directory.GetFiles(currentDir);
-                }
-                catch (UnauthorizedAccessException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-                catch (System.IO.DirectoryNotFoundException e) {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
-
-                foreach (string file in files) {
-                    try {
-
-                        System.IO.FileInfo fi = new System.IO.FileInfo(file);
-                        if (fi.Extension == extension) {
-                            processFile(fi, ref buildFileInfoList);
-                        }
-                    }
-                    catch (System.IO.FileNotFoundException e) {
-                        Console.WriteLine(e.Message);
-                        continue;
-                    }
-                }
-
-                foreach (string str in subDirs)
-                    dirs.Push(str);
-            }
-        }//TraverseTreeFileInfoList
-
-        //CULL
-        public static void ReadLuaBuildInfoProcess(FileInfo fileInfo, ref Dictionary<string, BuildFileInfo> buildFileInfoList) {
-
-            /* REF:
-            -- DOBUILD: 1
-            -- ORIGINALQAR: chunk0
-            -- PACKPATH: \Assets\tpp\pack\mission2\init\init.fpkd
-            */
-            // ASSUMPTION! no spaces in attrib1
-
-            string[] lines = File.ReadAllLines(fileInfo.FullName);
-
-            if (lines.Length == 0) {
-                return;
-            }
-
-            if (!lines[0].StartsWith("-- DOBUILD:")) {
-                return;
-            }
-
-            Console.WriteLine(fileInfo.Name);
-
-            BuildFileInfo buildFileInfo = null;
-            if (!buildFileInfoList.TryGetValue(fileInfo.FullName, out buildFileInfo)) {
-                buildFileInfo = new BuildFileInfo();
-                buildFileInfoList.Add(fileInfo.FullName, buildFileInfo);
-            }
-
-
-
-
-            char[] delimiterChars = { ' ' };
-            foreach (string line in lines) {
-                string[] words = line.Split(delimiterChars);
-
-                if (words.Length == 0) {
-                    break;
-                }
-                if (words[0] != "--") {
-                    break;
-                }
-
-                string attribId = words[1];
-                string attribValue = "";
-                if (words.Length > 2) {
-                    attribValue = words[2];
-                }
-                switch (attribId) {
-                    case "DOBUILD:":
-                        System.Console.WriteLine(line);
-
-                        int doBuild = 0;
-                        if (!Int32.TryParse(attribValue, out doBuild)) {
-                        }
-
-                        buildFileInfo.doBuild = doBuild > 0;
-                        break;
-                    /* CULL: case "ORIGINALQAR:":
-                        System.Console.WriteLine(line);
-                        if (buildFileInfo.originalQar == "") {
-                            buildFileInfo.originalQar = attribValue + "_dat";
-                        }
-                        break;
-                        */
-                    case "PACKPATH:":
-                        System.Console.WriteLine(line);
-                        buildFileInfo.packPath = attribValue;
-                        break;
-                }
-
-                if (fileInfo.Extension == ".lua") {
-                    buildFileInfo.fullPath = fileInfo.FullName;
-                }
-            }
-        }//ReadLuaBuildInfoProcess
 
         private static void UseTool(string toolPath, string args) {
             //Console.WriteLine(toolPath);
