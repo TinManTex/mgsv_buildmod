@@ -47,38 +47,15 @@ namespace mgsv_buildmod {
         // Doesn't matter what anything in the metadata.xml is set to except for MGSVersion. Everything else will get filled out by the above values.
         public string metadataPath = "";
 
-        //GOTCHA: don't fill out the following structures with examples because json entries are added rather than replace
-
-        // copyModFolders: Folders entirely copied to makebiteBuildPath
-        public List<string> modFolders = new List<string> {
-            //REF
-            //"fpk-mod/",
-            //"fpk-mod-ih/",
-        };
-
-        // copyModFiles: Specific files for folders copied to makebiteBuildPath
-        public Dictionary<string, List<string>> modFiles = new Dictionary<string, List<string>>() {
-            //REF
-            //{"data1_dat-lua-ih/", new List<string>{
-            //    "init.lua",
-            //    "Assets/tpp/level_asset/chara/enemy/Soldier2FaceAndBodyData.lua",
-            //    "Assets/tpp/script/lib/Tpp.lua",
-            //    "Assets/tpp/script/lib/TppAnimal.lua",
-            //    "Assets/tpp/script/lib/TppClock.lua",
-            //    "Assets/tpp/script/lib/TppDefine.lua"
-            //    }
-            // },
-        };//modFiles
-
-        // copyModArchiveFiles: Lets you keep files in Assetspath structure, but then have them put in their archive folders in makebiteBuildPath
+        //GOTCHA: don't fill out with examples because json entries are added rather than replace
         public Dictionary<string,
-            Dictionary<string, List<string>>> modArchiveFiles = new Dictionary<string,
+            Dictionary<string, List<string>>> modFiles = new Dictionary<string,
                                                                     Dictionary<string, List<string>>>() {
                 //REF
                 //{"fpkd-combined-lua/", new Dictionary<string, List<string>>{
                 //    {"Assets/tpp/level/mission2/init/init_sequence.lua", new List<string>{"Assets/tpp/pack/mission2/init/init_fpkd" },
                 //}, },
-            };//modArchiveFiles
+        };//modFiles
 
         public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
  
@@ -126,12 +103,6 @@ namespace mgsv_buildmod {
         public bool copyLuaFpkdFiles = false;//CULL supersceded by copyModArchiveFiles //tex uses luaFpkdFilesPath, fpk internal pathed lua files, their DOBUILD comment headers are used to copy them to full fpk paths, 
 
         public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
-
-        public bool copyModFolders = true;//tex uses modFolders
-
-        public bool copyModFiles = true;//for modFiles
-
-        public bool copyModArchiveFiles = true;//for modArchiveFiles
 
         // Copies files in externalLuaPath > "Assets", "Fox", "shaders", "Tpp" to the equivalent makebiteBuildPath
         // ie I keep some internal files external in \mod\ for dev build, but are put back internal for release

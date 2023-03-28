@@ -17,8 +17,8 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace mgsv_buildmod {
     class Program {
@@ -60,6 +60,14 @@ namespace mgsv_buildmod {
             //TODO: test path exists
 
             string jsonString = File.ReadAllText(buildSettingsPath);
+            //tex in case you want to go with System.Text.Json (and its millions of dlls)
+            //var serializeOptions = new JsonSerializerOptions {
+            //    ReadCommentHandling = JsonCommentHandling.Skip,
+            //    AllowTrailingCommas = true,
+            //    //PropertyNameCaseInsensitive = true,
+            //    //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            //    IncludeFields = true,
+            //};
             BuildModSettings bs = JsonConvert.DeserializeObject<BuildModSettings>(jsonString);
 
             if (bs.modPath == null || bs.modPath == "") {
@@ -109,20 +117,8 @@ namespace mgsv_buildmod {
                 CopyLuaFpkdFiles(bs);
             }
 
-            if (bs.copyModFolders) {
-                Console.WriteLine();
-                CopyModFolders(bs);
-            }
-
-            if (bs.copyModFiles) {
-                Console.WriteLine();
-                CopyModFiles(bs);
-            }
-
-            if (bs.copyModArchiveFiles) {
-                Console.WriteLine();
-                CopyModArchiveFiles(bs);
-            }
+            Console.WriteLine();
+            CopyModFiles(bs);
 
             if (bs.copyExternalLuaToInternal) {
                 Console.WriteLine();
@@ -207,81 +203,90 @@ namespace mgsv_buildmod {
             }
         }//Main
 
-        private static void CopyModFolders(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("copyModFolders");
-            foreach (string path in bs.modFolders) {
-                if (Directory.Exists(path)) {
-                    Console.WriteLine(path);
-                    CopyFilesRecursively(new DirectoryInfo(path), new DirectoryInfo(bs.makebiteBuildPath), "", "");
-                }
-            }
-        }
-
+        //tex copies all files in mod folder(s), to makebitebuildpath
+        //or specific file(s) in mod folder, to makebitebuildpath
+        //or specific file(s) in mod folder to target folder(s), in makebitebuildpath
         private static void CopyModFiles(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("copyModFiles");
-            if (bs.copyModFiles) {
-                foreach (var item in bs.modFiles) {
-                    string listFolderPath = item.Key;
-                    List<string> fileList = item.Value;
-                    Console.WriteLine(listFolderPath);
-                    foreach (string listFilePath in fileList) {
-                        Console.WriteLine(listFilePath);
-                        string filePath = $"{listFolderPath}/{listFilePath}";
+            ConsoleTitleAndWriteLine("CopyModFiles");
+            //REF
+            //Dictionary<string, List<string>> > modArchiveFiles = new Dictionary<string,
+            //                                                Dictionary<string, List<string>>>() {
+            //REF buildSettings json bs.manifest
+            //"fpkd-combined-lua/": {
+            //  "Assets/tpp/level/mission2/init/init_sequence.lua":
+            //      ["Assets/tpp/pack/mission2/init/init_fpkd"],
+            // ==
+            //'modFolderPath': {// absolute path or relative to modPath
+            //  //entries optional, no entries = copy whole folder to makeBiteBuildPath
+            //  'file in source':
+            //      [
+            //          //target entries optional, no entries = copy to makeBiteBuildPath root
+            //          'target folder (eg archive folder)',
+            //          'another target folder'
+            //          ...
+            //       ],
+            //  ...
+            //}
+
+            foreach (var folderFileList in bs.modFiles) {
+                // REF
+                // "data1_dat-lua-ih/": {},
+                // folderFileList.Key : folderFileList.Value,   
+                // modFolderPath : fileAndTargetFolderPaths,
+                string modFolderPath = folderFileList.Key;
+                Dictionary<string, List<string>> fileAndTargetFolderPaths = folderFileList.Value;
+
+                Console.WriteLine(modFolderPath);
+
+                //REF "data1_dat-lua-ih/": {},
+                //tex empty object means copy whole folder
+                if (fileAndTargetFolderPaths.Count == 0) {
+                    if (Directory.Exists(modFolderPath)) {
+                        CopyFilesRecursively(new DirectoryInfo(modFolderPath), new DirectoryInfo(bs.makebiteBuildPath), "", "");
+                    }
+                    continue;
+                }
+
+                foreach (var fileAndTargetList in fileAndTargetFolderPaths) {
+                    //REF
+                    //"Assets/tpp/script/lib/Tpp.lua": [],
+                    //"Assets/tpp/level/mission2/init/init_sequence.lua": ["Assets/tpp/pack/mission2/init/init_fpkd"],//tex target folderpaths used to put in archive folder(s) 
+                    // fileAndTargetList.Key : fileAndTargetList.Value,   
+                    // folderRelativeFilePath : targetFolderPaths,
+                    string folderRelativeFilePath = fileAndTargetList.Key;
+                    List<string> targetFolderPaths = fileAndTargetList.Value;
+
+                    Console.WriteLine(folderRelativeFilePath);
+
+                    //REF "Assets/tpp/script/lib/Tpp.lua": [],
+                    //tex empty object means copy to modPath root
+                    if (targetFolderPaths.Count == 0) {
+                        string filePath = $"{modFolderPath}/{folderRelativeFilePath}";
                         filePath = UnfungePath(filePath);
 
-                        string fileDest = $"{bs.makebiteBuildPath}/{listFilePath}";
+                        string fileDest = $"{bs.makebiteBuildPath}/{folderRelativeFilePath}";
                         fileDest = UnfungePath(fileDest);
                         if (!Directory.Exists(Path.GetDirectoryName(fileDest))) {
                             Directory.CreateDirectory(Path.GetDirectoryName(fileDest));
                         }
 
                         File.Copy(filePath, fileDest, true);
-                    }//foreach in  listFolder
-                }//foreach in modFiles
-            }//if copyModFiles
-        }//CopyModFiles
+                        continue;
+                    }//if targetFolderPaths == 0
 
-        private static void CopyModArchiveFiles(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("copyModArchiveFiles");
-            //REF
-            //Dictionary<string, List<string>> > modArchiveFiles = new Dictionary<string,
-            //                                                Dictionary<string, List<string>>>() {
-            //REF buildSettings
-            //"modArchiveFiles": {
-            //    //source folder (absolute or modPath relative)
-            //    "fpkd-combined-lua/": {
-            //        //{file in source: [target archive folder, another target archive]}
-            //        "Assets/tpp/level/mission2/init/init_sequence.lua":          ["Assets/tpp/pack/mission2/init/init_fpkd"],
-            if (bs.copyModArchiveFiles) {
-                foreach (var item in bs.modArchiveFiles) {
-                    //REF "fpkd-combined-lua/"
-                    string listFolderPath = item.Key;                    
-                    Console.WriteLine(listFolderPath);
-                    
-                    Dictionary<string, List<string>> fileArchiveLists = item.Value;
-                    foreach (var fileArchiveList in fileArchiveLists) {
-                        //REF "Assets/tpp/level/mission2/init/init_sequence.lua"
-                        string inArchiveFilePath = fileArchiveList.Key;
-                        Console.WriteLine(inArchiveFilePath);
-
-                        string fileSource = $"{listFolderPath}/{inArchiveFilePath}";
+                    foreach (string targetPath in targetFolderPaths) {
+                        string fileDest = $"{bs.makebiteBuildPath}/{targetPath}/{folderRelativeFilePath}";
+                        fileDest = UnfungePath(fileDest);
+                        if (!Directory.Exists(Path.GetDirectoryName(fileDest))) {
+                            Directory.CreateDirectory(Path.GetDirectoryName(fileDest));
+                        }
+                        string fileSource = $"{modFolderPath}/{folderRelativeFilePath}";
                         fileSource = UnfungePath(fileSource);
-
-                        //REF ["Assets/tpp/pack/mission2/init/init_fpkd"]
-                        List<string> archiveFilePaths = fileArchiveList.Value;
-                        foreach (string archivePath in archiveFilePaths) {
-                            string fileDest = $"{bs.makebiteBuildPath}/{archivePath}/{inArchiveFilePath}";
-                            fileDest = UnfungePath(fileDest);
-                            if (!Directory.Exists(Path.GetDirectoryName(fileDest))) {
-                                Directory.CreateDirectory(Path.GetDirectoryName(fileDest));
-                            }
-
-                            File.Copy(fileSource, fileDest, true);
-                        }//foreach in archiveFilePaths
-                    }//foreach in  listFolder
-                }//foreach in modArchiveFiles
-            }//if copyModArchiveFiles
-        }//CopyModArchiveFiles
+                        File.Copy(fileSource, fileDest, true);
+                    }//foreach in archiveFilePaths
+                }//foreach in  listFolder
+            }//foreach in modArchiveFiles
+        }//CopyModFiles
 
         private static void UpdateMetadata(BuildModSettings bs) {
             string makeBiteMetaDataFilePath = UnfungePath($"{bs.metadataPath}\\metadata.xml");
