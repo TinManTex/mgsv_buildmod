@@ -4,9 +4,8 @@ Still a bit messy since it was designed for IHs specific dev layout, but has bee
 
 At its core it works on a list of folders in makebite-layout, runs various seperate fox engine tools on them then copies and makebites them off a single build folder.
 
-Set tool paths via mgsv_buildmod.exe.config
-Run without any args to generate a .json of BuildModSettings
-Pass in path to a BuildModSettings .json to use it
-See comments on the BuildModSettings in Program.cs
-
-In the case of Infinite Heaven the build settings can be found in tpp/build-infinite_heaven*.json
+Set tool paths via mgsv_buildmod.exe.config next to the exe.
+Run without any args to generate a jsonc of BuildModSettings.
+Pass in path to a BuildModSettings to use it.
+See comments on BuildSettings.cs
+Or the tpp/infinite_heaven-dev.buildmod BuildSettings file on the Infinite Heaven repo which is heavily commented.
