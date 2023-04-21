@@ -129,6 +129,11 @@ namespace mgsv_buildmod {
 
             UpdateMetadata(bs);
 
+            if (bs.addLuaFileVersions) {
+                Console.WriteLine();
+                AddLuaFileVersions(bs);
+            }
+
             string makebiteMgsvOutputFilePath = $"{bs.makebiteBuildPath}\\mod.mgsv";
             string makeBiteMgsvDestFilePath = $"{bs.buildPath}\\{bs.modFileName}.mgsv";
 
@@ -262,6 +267,7 @@ namespace mgsv_buildmod {
                         continue;
                     }//if targetFolderPaths == 0
 
+                    //REF: "Assets/tpp/level/mission2/init/init_sequence.lua":          ["Assets/tpp/pack/mission2/init/init_fpkd",...],
                     foreach (string targetPath in targetFolderPaths) {
                         string fileDest = $"{bs.makebiteBuildPath}/{targetPath}/{folderRelativeFilePath}";
                         fileDest = UnfungePath(fileDest);
@@ -309,6 +315,73 @@ namespace mgsv_buildmod {
                 File.Copy(makeBiteMetaDataFilePath, makeBiteMetaDataDestFilePath, true);
             }
         }//UpdateMetadata
+
+        //Adds this.modId and this.modVersion to makebiteBuild .lua files, used by IH for error checking
+        //GOTCHA: looks specifically for 'local this'
+        private static void AddLuaFileVersions(BuildModSettings bs) {
+            ConsoleTitleAndWriteLine("AddLuaFileVersions");
+            Console.WriteLine("Getting lua files list");
+
+            string modIdLine=$"modId=\"{bs.Name}\"";
+            string modVersionLine = $"version=\"{bs.Version}\"";
+
+            var makebiteBuildFiles = Directory.GetFiles(bs.makebiteBuildPath, "*.lua", SearchOption.AllDirectories);
+
+            Console.WriteLine("Updating data");
+            var taskWatch = new Stopwatch();
+            taskWatch.Start();
+            //var tasks = new List<Task>();
+            foreach (var filePath in makebiteBuildFiles) {
+                //DEBUGNOW tasks.Add(Task.Run(() => UseTool(fileTypesToCompileToolPaths[item.Key], filePath)));
+                //tex WORKAROUND DEBUGNOW think this through
+                if (filePath.Contains("InfCore.lua")) {
+                    continue;
+                }
+
+                var parts = filePath.Split('\\');
+                string fileName = parts[parts.Length-1];
+
+                int extPos = fileName.IndexOf(".lua");
+                string moduleName = fileName.Substring(0,extPos);
+
+
+                string[] lines = File.ReadAllLines(filePath);
+                using (StreamWriter writer = new StreamWriter(filePath)) {
+                    bool foundInsertPoint = false;
+                    foreach (string line in lines) {
+                        writer.WriteLine(line);
+                        //tex DEBUGNOW  mbdvc_map luas have the bad practice of just declaring self as global
+                        if ((line.IndexOf("local this") != -1 || line.IndexOf($"local {moduleName}") != -1) && line.IndexOf("=") != -1) {
+                            foundInsertPoint = true;
+                            if (line.IndexOf("{}") != -1) {
+                                writer.WriteLine("--added by mgsv_buildmod >");
+                                writer.WriteLine($"this.{modIdLine}");
+                                writer.WriteLine($"this.{modVersionLine}");
+                                writer.WriteLine("--<");
+                            } else {
+                                if (line.IndexOf("{") != -1) {
+                                    writer.WriteLine("--added by mgsv_buildmod >");
+                                    writer.WriteLine($"{modIdLine},");
+                                    writer.WriteLine($"{modVersionLine},");
+                                    writer.WriteLine("--<");
+                                }
+                                else {
+                                    //tex TODO: deal with hits to this
+                                    Console.WriteLine($"WARNING: could not parse {line} in {filePath}");
+                                }
+                            }//if {} or {
+                        }//if line local this or moduleName
+                    }//foreach lines
+                    if (!foundInsertPoint) {
+                        //tex TODO: deal with hits to this
+                        Console.WriteLine($"WARNING: could not find 'local this' in {filePath}");
+                    }
+                }//using StreamWriter
+            }//foreach filePath
+            //Task.WaitAll(tasks.ToArray());
+            taskWatch.Stop();
+            Console.WriteLine($"time to update lua files: {taskWatch.ElapsedMilliseconds}ms");
+        }//AddLuaFileVersions
 
         private static void CompileMakebiteBuildFiles(BuildModSettings bs) {
             ConsoleTitleAndWriteLine("Compiling file types in makebiteBuildPath");
@@ -523,6 +596,7 @@ namespace mgsv_buildmod {
             }
 
             path = path.Replace("/", "\\");
+            path = path.Replace("\\\\", "\\");
 
             //if (Path.IsPathRooted(path)) {
             //    String unfucked = new Uri(path).LocalPath;//tex outputs backslashes, and uhh what else was i using this for?

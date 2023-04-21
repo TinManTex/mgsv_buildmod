@@ -20,8 +20,9 @@ namespace mgsv_buildmod {
 
     internal class BuildModSettings {
         // Snakebite metadata
-        public string Version = "";
-        public string Name = "";
+        public string Version = "";//string version, ex for IH == "r256"
+        public string Name = "";//pretty name for snakebite //tex also used for to identify in snakebite uninstallExistingMod
+        public string ModId = "";//for AddLuaFileVersions
         public string Author = "";
         public string Website = "";
         //
@@ -104,6 +105,8 @@ namespace mgsv_buildmod {
         // GOTCHA: ih will still try to load external by default, so do not include externalLuaPath files in release (see ih repo tpp vs tpp-release)
         // The function will delete any of the above mentioned sub paths in makebiteBuild GameDir\mod\ to mitigate this.
         public bool copyExternalLuaToInternal = false;
+        // Adds .modId and .version to all lua files in makebiteBuildPath, used by IH for error checking
+        public bool addLuaFileVersions = false;
         // Run makebite on makebiteBuildPath, copy the .mgsv to buildPath.
         public bool makeMod = true;
         // Uninstalls first mod found that matches {Name}
