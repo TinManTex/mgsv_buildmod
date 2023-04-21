@@ -68,9 +68,6 @@ namespace mgsv_buildmod {
             bs.modPath = UnfungePath(bs.modPath);
             bs.docsPath = UnfungePath(bs.docsPath);
             bs.metadataPath = UnfungePath(bs.metadataPath);
-            bs.externalLuaPath = UnfungePath(bs.externalLuaPath);
-            bs.modulesLuaPath = UnfungePath(bs.modulesLuaPath);
-            bs.modulesInternalPath = UnfungePath(bs.modulesInternalPath);
             bs.makebiteBuildPath = UnfungePath(bs.makebiteBuildPath);
             bs.buildPath = UnfungePath(bs.buildPath);
             bs.gamePath = UnfungePath(bs.gamePath);
@@ -107,16 +104,6 @@ namespace mgsv_buildmod {
             CopyModFiles(bs);
             stepWatch.Stop();
             Console.WriteLine($"step in {stepWatch.ElapsedMilliseconds}ms");
-
-            if (bs.copyExternalLuaToInternal) {
-                Console.WriteLine();
-                CopyExternalLuaToInternal(bs);
-            }
-
-            if (bs.copyModulesToInternal) {
-                Console.WriteLine();
-                CopyModulesToInternal(bs);
-            }
 
             if (bs.copyEngLng2sToOtherLangCodes) {
                 CopyEngLng2sToOtherLangCodes(bs);
@@ -431,46 +418,6 @@ namespace mgsv_buildmod {
             taskWatch.Stop();
             Console.WriteLine($"time to compile: {taskWatch.ElapsedMilliseconds}ms");
         }//CompileMakebiteBuildFiles
-
-        private static void CopyModulesToInternal(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("copying external modules folder to internal");
-            if (Directory.Exists(bs.modulesLuaPath)) {
-                //DEBUGNOW dont like this, need a more general external path to internal path system?
-                string destPath = $"{bs.makebiteBuildPath}\\{bs.modulesInternalPath}";
-                Directory.CreateDirectory(destPath);
-                CopyFilesRecursively(new DirectoryInfo(bs.modulesLuaPath), new DirectoryInfo(destPath), "", "");
-                string modulesPath = bs.makebiteBuildPath + @"\GameDir\mod\modules";
-                if (Directory.Exists(modulesPath)) {
-                    DeleteAndWait(modulesPath);
-                    Directory.CreateDirectory(modulesPath);
-                    File.CreateText(modulesPath + "/ih_files.txt").Close();
-                }
-            }
-        }
-
-        private static void CopyExternalLuaToInternal(BuildModSettings bs) {
-            ConsoleTitleAndWriteLine("copying external folders to internal");
-            //tex just covering internal folders that have lua in tpp base game
-            string[] internalFolders = {
-                "Assets",
-                "Fox",
-                "shaders",
-                "Tpp"
-            };
-            foreach (var subPath in internalFolders) {
-                var externalPath = $"{bs.externalLuaPath}\\{subPath}";
-                if (Directory.Exists(externalPath)) {
-                    string internalPath = $"{bs.makebiteBuildPath}\\{subPath}";
-                    Directory.CreateDirectory(internalPath);
-                    CopyFilesRecursively(new DirectoryInfo(externalPath), new DirectoryInfo(internalPath), "", "");
-                    //DEBUGNOW TODO also don't like this, modules will have been blindly copied via modFolders, so kill them
-                    string buildExternalAssetsPath = $"{bs.makebiteBuildPath}\\GameDir\\mod\\{subPath}";
-                    if (Directory.Exists(buildExternalAssetsPath)) {
-                        DeleteAndWait(buildExternalAssetsPath);
-                    }
-                }
-            }
-        }
 
         private static void CopyDocsToBuild(BuildModSettings bs) {
             if (Directory.Exists(bs.docsPath)) {

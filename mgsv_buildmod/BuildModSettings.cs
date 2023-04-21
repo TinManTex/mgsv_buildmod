@@ -58,11 +58,6 @@ namespace mgsv_buildmod {
                 //}, },
         };//modFiles
 
-        public string externalLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod";//tex for copyExternalLuaToInternal
-
-        public string modulesLuaPath = @"C:\Projects\MGS\InfiniteHeaven\tpp\gamedir-ih\GameDir\mod\modules";//tex for copyModulesToInternal
-        public string modulesInternalPath = @"\Assets\tpp\script\ih";//tex for copyModulesToInternal
-
         public string gamePath = null;//@"C:\Games\Steam\SteamApps\common\MGS_TPP";
 
         // Settings 
@@ -98,13 +93,6 @@ namespace mgsv_buildmod {
             {".lng2.xml", true },
         };
 
-        public bool copyModulesToInternal = false;//copies external lua modules to internal [WIP]
-
-        // Copies files in externalLuaPath > "Assets", "Fox", "shaders", "Tpp" to the equivalent makebiteBuildPath
-        // ie I keep some internal files external in \mod\ for dev build, but are put back internal for release
-        // GOTCHA: ih will still try to load external by default, so do not include externalLuaPath files in release (see ih repo tpp vs tpp-release)
-        // The function will delete any of the above mentioned sub paths in makebiteBuild GameDir\mod\ to mitigate this.
-        public bool copyExternalLuaToInternal = false;
         // Adds .modId and .version to all lua files in makebiteBuildPath, used by IH for error checking
         public bool addLuaFileVersions = false;
         // Run makebite on makebiteBuildPath, copy the .mgsv to buildPath.
